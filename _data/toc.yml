@@ -14,4 +14,6 @@
     url: ingest_ads_notebook_files
   - title: Metadata Refresh for SQL Server
     url: metadata_refresh_for_sql_server
+  - title: Database Log Clean-up
+    url: database_log_cleanup
     
