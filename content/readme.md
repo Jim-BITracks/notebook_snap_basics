@@ -2,8 +2,8 @@
 
 ## Notebooks:
 
-[Ingest ADS Notebook Files](ingest_ads_notebook_files.ipynb) - SQL Code to Ingest ADS Files
+[Ingest ADS Notebook Files](ingest_ads_notebook_files.ipynb) - PowerShell Notebook to Ingest '.ipynb' Files
 
-[Metadata Refresh for SQL Server](metadata_refresh_for_sql_server.ipynb) - Refreshes stored Metadata collected from a SQL Server database
+[Metadata Refresh for SQL Server](metadata_refresh_for_sql_server.ipynb) - Refreshes Metadata collected from a SQL Server database and stored into an eltSnap database
 
-[Database Log Clean-up](database_log_cleanup.ipynb) - Deletes Log rows which are older than configured thresholds
+[Database Log Clean-up](database_log_cleanup.ipynb) - Deletes eltSnap Log rows which are older than configured thresholds in table: 
