@@ -14,7 +14,9 @@
     url: ingest_ads_notebook_files_interactive
   - title: Ingest ADS Notebook Files (Project)
     url: ingest_ads_notebook_files_project
-  - title: Database Log Clean-up
-    url: database_log_cleanup
-  - title: Metadata Refresh for SQL Server
-    url: metadata_refresh_for_sql_server
+  - title: Ingest ADS Notebook Files (Project Setup)
+    url: ingest_ads_notebook_files_project_setup
+  - title: Database Log Clean-up (Project)
+    url: database_log_cleanup_project
+  - title: Metadata Refresh for SQL Server (Project)
+    url: metadata_refresh_for_sql_server_project
