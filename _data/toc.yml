@@ -10,8 +10,10 @@
   not_numbered: true
   expand_sections: true
   sections:
-  - title: Ingest ADS Notebook Files
-    url: ingest_ads_notebook_files
+  - title: Ingest ADS Notebook Files (Interactive)
+    url: ingest_ads_notebook_files_interactive
+  - title: Ingest ADS Notebook Files (Project)
+    url: ingest_ads_notebook_files_project
   - title: Database Log Clean-up
     url: database_log_cleanup
   - title: Metadata Refresh for SQL Server
