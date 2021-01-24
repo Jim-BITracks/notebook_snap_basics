@@ -31,4 +31,8 @@ Notebook Types:
 
 [Database Log Clean-up (Project)](database_log_cleanup_project.ipynb) - SQL Notebook Project to Delete eltSnap related Log rows which are _older_ than thresholds set in configuration tables. **Note**: This is _pre_-installed into the eltsnap_v2 database, so **no setup or deployment** is needed to be able to run this project in eltSnap
 
+[Database Log Clean-up (Project Setup)](database_log_cleanup_project_setup.ipynb) - Initial Setup scripts for **Database Log Clean-up (Project)**
+
 [Metadata Refresh for SQL Server (Project)](metadata_refresh_for_sql_server_project.ipynb) - Refreshes Metadata collected from a SQL Server database and stored into an eltSnap database
+
+[Metadata Refresh for SQL Server (Project Setup)](metadata_refresh_for_sql_server_project_setup.ipynb) - Initial Setup scripts for **Metadata Refresh for SQL Server (Project)**

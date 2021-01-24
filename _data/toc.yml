@@ -22,3 +22,5 @@
     url: database_log_cleanup_project_setup
   - title: Metadata Refresh for SQL Server (Project)
     url: metadata_refresh_for_sql_server_project
+  - title: Metadata Refresh for SQL Server (Project Setup)
+    url: metadata_refresh_for_sql_server_project_setup
