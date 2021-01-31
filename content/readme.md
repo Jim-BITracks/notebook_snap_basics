@@ -40,3 +40,7 @@ Notebook Types:
 [Metadata Refresh for Snowflake (Project)](metadata_refresh_for_snowflake_project.ipynb) - Refreshes Metadata collected from a Snowflake database and stored into an eltSnap database
 
 [Metadata Refresh for Snowflake (Project Setup)](metadata_refresh_for_snowflake_project_setup.ipynb) - Initial Setup scripts for **Metadata Refresh for Snowflake (Project)**
+
+## SQL Files:
+
+[Refresh Database Names (snowflake)](refresh_database_names_snowflake.sql) - PowerShell N
