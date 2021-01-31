@@ -36,3 +36,7 @@ Notebook Types:
 [Metadata Refresh for SQL Server (Project)](metadata_refresh_for_sql_server_project.ipynb) - Refreshes Metadata collected from a SQL Server database and stored into an eltSnap database
 
 [Metadata Refresh for SQL Server (Project Setup)](metadata_refresh_for_sql_server_project_setup.ipynb) - Initial Setup scripts for **Metadata Refresh for SQL Server (Project)**
+
+[Metadata Refresh for Snowflake (Project)](metadata_refresh_for_snowflake_project.ipynb) - Refreshes Metadata collected from a Snowflake database and stored into an eltSnap database
+
+[Metadata Refresh for Snowflake (Project Setup)](metadata_refresh_for_snowflake_project_setup.ipynb) - Initial Setup scripts for **Metadata Refresh for Snowflake (Project)**
