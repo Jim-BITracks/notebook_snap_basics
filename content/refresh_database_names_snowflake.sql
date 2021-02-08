@@ -2,7 +2,7 @@
 {
 "notebooksnap": {
    "cell_name": "Refresh Database Names (snowflake)",
-   "src_connection": "sql_server",
+   "src_connection": "snowflake-demo",
    "dst_connection": "eltsnap_v2",
    "dst_schema": "stg",
    "dst_table": "dim_database",
