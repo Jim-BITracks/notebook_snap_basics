@@ -1,7 +1,7 @@
 /*
 {
 "notebooksnap": {
-        "cell_name": "src to stg - SQL Server tables",
+        "cell_name": "src to stg - Snowflake tables",
         "src_connection": "snowflake-demo",
         "dst_connection": "eltsnap_v2",
         "dst_schema": "stg",
