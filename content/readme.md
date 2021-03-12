@@ -1,13 +1,13 @@
 # Notebook_Snap Basics
 
-These Notebooks contain Code and Instructions for _Creating Projects_ eltSnap.
+These Notebooks contain Code and Instructions for _Creating Projects_ in the eltsnap_v2 database.
 
 Key Concepts:
 
 - All of the **Code** to be _transformed_ into eltSnap **Projects** is contained in these Notebooks
 - Additional Notebooks are provided to assist in the _Setup_ as well as a potential _Refresh_ of these Projects
-- Notebooks must first be _Ingested_ into the eltsnap_v2 database using the Notebook: **Ingest ADS Notebook Files (Interactive)**
-- Notebook Code cells contain _metadata_ (pre-populated for these Notebooks) which provide additional configurations used by the eltSnap runtime
+- Notebook (and .sql) files must first be _Ingested_ into the eltsnap_v2 database using the Notebook: **Ingest ADS Notebook Files (Interactive)**
+- Notebook Code cells contain _metadata_ (pre-populated for these Notebooks) which provide additional configurations needed by the eltSnap runtime
 - If you have cloned this repository, you may see subsequent updates to these notebook files via GitHub. In that event, you may want to:
     - Save any custom changes you have made to separate folders
     - Sync your local folders with GitHub
@@ -15,8 +15,8 @@ Key Concepts:
 
 Notebook Types:
 
-- ...(Project) - Contains the Notebook _Code_ which is configured to be deployed as runnable _Packages_ in eltSnap
-- ...(Project Setup) - Contains setup instructions and code for _deploying_ notebook based Projects in eltSnap
+- ...(Project) - Contains the Notebook _Code_ which is deployed as runnable _Packages_ in eltSnap
+- ...(Project Setup) - Contains setup instructions and code for _deploying_ notebook (and .sql) file based Projects to eltSnap
 - ...(Interactive) - A self-contained solution which can be configured and run in Azure Data Studio, without any additional set-up or deployment 
 
 > The notebook **Ingest ADS Notebook Files** can be run _Interactively_ (directly in Azure Data Studio) and the project does **not** need to be deployed to eltSnap. The "Project" and "Project Setup" notebooks for _Ingest ADS Notebook Files_ are included below as an **eltSnap** deployment _option_
