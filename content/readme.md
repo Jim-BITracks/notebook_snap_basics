@@ -4,7 +4,7 @@ These Notebooks contain Code and Instructions for _Creating Projects_ in the elt
 
 Key Concepts:
 
-- All of the **Code** to be _transformed_ into eltSnap **Projects** is contained in these Notebooks
+- All of the **Code** to be _transformed_ into eltSnap **Projects** are contained Notebook (.ipydb) and SQL (.sql) files
 - Additional Notebooks are provided to assist in the _Setup_ as well as a potential _Refresh_ of these Projects
 - Notebook (and .sql) files must first be _Ingested_ into the eltsnap_v2 database using the Notebook: **Ingest ADS Notebook Files (Interactive)**
 - Notebook Code cells contain _metadata_ (pre-populated for these Notebooks) which provide additional configurations needed by the eltSnap runtime
