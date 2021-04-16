@@ -2,7 +2,7 @@
 {
 "notebooksnap": {
         "cell_name": "Create Added Dim Column Names Table (snowflake)",
-        "source": "snowflake-demo",
+        "connection": "snowflake-demo",
         "pattern": "Execute SQL"
     }
 }
