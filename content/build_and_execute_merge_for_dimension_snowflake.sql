@@ -1,6 +1,13 @@
-USE CAR_CRASH;
-
-CREATE OR REPLACE PROCEDURE STG.BUILD_AND_EXECUTE_MERGE_FOR_DIMENSION(STG_SCHEMA VARCHAR, 
+/*
+{
+"notebooksnap": {
+        "cell_name": "Insert into Added Dim Column Names Table (snowflake)",
+        "source": "snowflake-demo",
+        "pattern": "Execute SQL"
+    }
+}
+*/
+CREATE OR REPLACE PROCEDURE ${snowflake_staging_schema}.BUILD_AND_EXECUTE_MERGE_FOR_DIMENSION(STG_SCHEMA VARCHAR, 
 																	  STG_TABLE VARCHAR, 
 																	  EDW_SCHEMA VARCHAR, 
 																	  EDW_TABLE VARCHAR, 
@@ -41,7 +48,7 @@ if ( EDW_DATABASE == '' )
 
 // Get names for supplemental dimension columns
 sql = `SELECT ROW_IS_CURRENT, ROW_EFFECTIVE_DATE, ROW_EXPIRATION_DATE, ROW_INSERT_DATE, ROW_UPDATE_DATE 
-		FROM STG.ADDED_DIM_COLUMN_NAMES 
+		FROM ` + STG_SCHEMA + `.ADDED_DIM_COLUMN_NAMES 
 		WHERE ADDED_DIM_COLUMN_NAMES_TAG  = '` + ADDED_DIM_COLUMN_NAMES_TAG + `'`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();

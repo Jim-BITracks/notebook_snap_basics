@@ -1,3 +1,12 @@
+/*
+{
+"notebooksnap": {
+        "cell_name": "Create Added Dim Column Names Table (snowflake)",
+        "source": "snowflake-demo",
+        "pattern": "Execute SQL"
+    }
+}
+*/
 CREATE TABLE IF NOT EXISTS ${snowflake_staging_schema}.ADDED_DIM_COLUMN_NAMES (
 			ADDED_DIM_COLUMN_NAMES_TAG VARCHAR(255) NOT NULL,
 			ROW_IS_CURRENT VARCHAR(255) NOT NULL,
@@ -5,9 +14,4 @@ CREATE TABLE IF NOT EXISTS ${snowflake_staging_schema}.ADDED_DIM_COLUMN_NAMES (
 			ROW_EXPIRATION_DATE VARCHAR(255) NOT NULL,
 			ROW_INSERT_DATE VARCHAR(255) NOT NULL,
 			ROW_UPDATE_DATE VARCHAR(1283) NOT NULL)
-AS 
-SELECT 'Standard','row_is_current','row_effective_date','row_expiration_date','row_insert_date','row_update_date'
-UNION ALL
-SELECT 'Standard_UC','ROW_IS_CURRENT','ROW_EFFECTIVE_DATE','ROW_EXPIRATION_DATE','ROW_INSERT_DATE','ROW_UPDATE_DATE' 
-
 
