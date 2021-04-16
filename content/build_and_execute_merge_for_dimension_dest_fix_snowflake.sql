@@ -1,7 +1,7 @@
 /*
 {
 "notebooksnap": {
-        "cell_name": "Insert into Added Dim Column Names Table (snowflake)",
+        "cell_name": "Create Dest Dimension Self-fix Procedure (snowflake)",
         "source": "snowflake-demo",
         "pattern": "Execute SQL"
     }
