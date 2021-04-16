@@ -34,3 +34,5 @@
     url: sql_server_backup_project_setup
   - title: PowerShell Utilities (Cmdlets)
     url: powershell_utilities
+  - title: Build Merge for Snowflake Dimension (Project Setup)
+    url: build_merge_for_dimension_snowflake
