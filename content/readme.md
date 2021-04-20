@@ -48,6 +48,8 @@ Notebook Types:
 
 [PowerShell Utilities (Project)](powershell_utilities.ipynb) - Contains miscellaneous Cmdlets (a one-line script) which can be incorporated into other notebookSnap project
 
+[Build Merge for Snowflake Dimension (Project Setup)](build_merge_for_dimension_snowflake.ipynb) - Contains miscellaneous Cmdlets (a one-line script) which can be incorporated into other notebookSnap project
+
 ## SQL Files:
 
 [Refresh Database Names (snowflake)](refresh_database_names_snowflake.sql) - Used for Snowflake Metadata Refresh
