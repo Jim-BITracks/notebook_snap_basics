@@ -35,4 +35,6 @@
   - title: PowerShell Utilities (Cmdlets)
     url: powershell_utilities
   - title: Build Merge for Snowflake Dimension (Project Setup)
-    url: build_merge_for_dimension_snowflake
+    url: build_merge_for_dimension_snowflake  
+  - title: Build Sample Merge for Snowflake Dimension (Project Setup)
+    url: build_sample_merge_for_dimension_snowflake_project_setup
