@@ -4,14 +4,14 @@ These Notebooks contain Code and Instructions for _Creating Projects_ in the elt
 
 Key Concepts:
 
-- All of the **Code** to be _transformed_ into eltSnap **Projects** are contained Notebook (.ipydb) and SQL (.sql) files
-- Additional Notebooks are provided to assist in the _Setup_ as well as a potential _Refresh_ of these Projects
+- All of the **Code** which will be be _transformed_ into eltSnap **Projects** are contained Notebook (.ipydb) and SQL (.sql) files
+- Additional Notebooks are provided to assist in the _Setup_ as well as a later _Refreshes_ of these Projects
 - Notebook (and .sql) files must first be _Ingested_ into the eltsnap_v2 database. One option for this is to use the Notebook: **Ingest ADS Notebook Files (Interactive)** contained in this folder
 - Notebook Code cells contain _metadata_ (pre-populated for these Notebooks) which provide additional configurations needed by the eltSnap runtime
 - If you have cloned this repository, you may see subsequent updates to these notebook files via GitHub. In that event, you may want to:
     - Save any custom changes you have made to separate folders
     - Sync your local folders with GitHub
-    - **re**-ingest the Notebook based Projects into eltSnap
+    - **re**-ingest the Notebook based Projects into eltSnap (after re-applying your custom changes)
 
 Notebook Types:
 
@@ -50,11 +50,30 @@ Notebook Types:
 
 [Build Merge for Snowflake Dimension (Project Setup)](build_merge_for_dimension_snowflake.ipynb) - Contains miscellaneous Cmdlets (a one-line script) which can be incorporated into other notebookSnap project
 
+[Build Sample Merge for Snowflake Dimension (Project Setup)](build_sample_merge_for_dimension_snowflake_project_setup.ipynb) - Contains miscellaneous Cmdlets (a one-line script) which can be incorporated into other notebookSnap project
+
 ## SQL Files:
 
-[Refresh Database Names (snowflake)](refresh_database_names_snowflake.sql) - Used for Snowflake Metadata Refresh
+### Used by Project 'Metadata Refresh for Snowflake':
 
-[Refresh Table Names (snowflake)](src_to_stg_snowflake_tables.sql) - Used for Snowflake Metadata Refresh
+- [Refresh Database Names (snowflake)](refresh_database_names_snowflake.sql)
 
-[Refresh Column Names (snowflake)](src_to_stg_snowflake_columns.sql) - Used for Snowflake Metadata Refresh
+- [Refresh Table Names (snowflake)](refresh_table_names_snowflake.sql) 
 
+- [Refresh Column Names (snowflake)](refresh_column_names_snowflake.sql)
+
+### Used by Project 'Build Merge for Snowflake Dimension':
+
+- [Create Table ADDED_DIM_COLUMN_NAMES (snowflake)](added_dim_column_names_snowflake_create.sql)
+
+- [Insert Table ADDED_DIM_COLUMN_NAMES (snowflake)](added_dim_column_names_snowflake_insert.sql)
+
+- [Build and Execute Merge Statement (snowflake)](build_and_execute_merge_for_dimension_snowflake.sql)
+
+- [Build and Execute Merge Statement with Self-Healing (snowflake)](build_and_execute_merge_for_dimension_dest_fix_snowflake.sql)
+
+### Used by Project 'Build Sample Merge for Snowflake Dimension':
+
+- [Create Table DIM_COLUMN (snowflake)](Create_DIM_COLUMN_Table.sql)
+
+- [Create View DIM_COLUMN (snowflake)](Create_DIM_COLUMN_VIEW_as_src.sql)
