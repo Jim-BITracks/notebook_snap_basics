@@ -1,6 +1,6 @@
 # notebookSnap Basics
 
-These Notebooks contain Code and Instructions for _Creating Projects_ in the eltsnap_v2 database.
+The Notebooks included in this Solution contain Code and Instructions for _Creating Projects_ in the eltsnap_v2 database.
 
 Key Concepts:
 
