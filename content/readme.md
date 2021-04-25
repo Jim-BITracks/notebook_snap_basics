@@ -48,9 +48,9 @@ Notebook Types:
 
 [PowerShell Utilities (Project)](powershell_utilities.ipynb) - Contains miscellaneous Cmdlets (a one-line script) which can be incorporated into other notebookSnap project
 
-[Build Merge for Snowflake Dimension (Project Setup)](build_merge_for_dimension_snowflake.ipynb) - Contains miscellaneous Cmdlets (a one-line script) which can be incorporated into other notebookSnap project
+[Build Merge for Snowflake Dimension (Project Setup)](build_merge_for_dimension_snowflake.ipynb) - NotebookSnap project to deploy Snowflake MERGE statements
 
-[Build Sample Merge for Snowflake Dimension (Project Setup)](build_sample_merge_for_dimension_snowflake_project_setup.ipynb) - Contains miscellaneous Cmdlets (a one-line script) which can be incorporated into other notebookSnap project
+[Build Sample Merge for Snowflake Dimension (Project Setup)](build_sample_merge_for_dimension_snowflake_project_setup.ipynb) - NotebookSnap project to create a sample Snowflake MERGE statement
 
 ## SQL Files:
 

@@ -7,7 +7,7 @@
     }
 }
 */
-CREATE TABLE IF NOT EXISTS /*${snowflake_Schema}*/"STG"/**/.DIM_COLUMN (
+CREATE TABLE IF NOT EXISTS /*${snowflake_Schema}*/STG/**/.DIM_COLUMN (
 	COLUMN_SK NUMBER(38,0) autoincrement,
 	TABLE_CATALOG VARCHAR(255),
 	TABLE_SCHEMA VARCHAR(255),
