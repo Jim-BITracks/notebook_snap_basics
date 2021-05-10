@@ -89,11 +89,11 @@ sql = `WITH base AS
 			ORDER BY c.ORDINAL_POSITION
 		)
 		  SELECT TRIM(LISTAGG(' s.' || COLUMN_NAME || ', '), ', ') || ' ' AS "SELECT"
-				,TRIM(LISTAGG(' r.' || COLUMN_NAME || ' = s.' || COLUMN_NAME  || ' AND '), 'AND ')  AS "BusKeyJoin"
-				,TRIM(LISTAGG(' t1.' || COLUMN_NAME || ' = s.' || COLUMN_NAME  || ' AND '), 'AND ') AS "BusKeyJoin_t1"
-				,TRIM(LISTAGG(' t2.' || COLUMN_NAME || ' = s.' || COLUMN_NAME  || ' AND '), 'AND ') AS "BusKeyJoin_t2"
-				,TRIM(LISTAGG(' nc.' || COLUMN_NAME || ' = s.' || COLUMN_NAME  || ' AND '), 'AND ') AS "BusKeyJoin_nc"
-				,TRIM(LISTAGG(' src.' || COLUMN_NAME || ' = dst.' || COLUMN_NAME  || ' AND '), 'AND ') AS "BusKeyJoin_src"
+				,TRIM(RTRIM(LISTAGG(' r.' || COLUMN_NAME || ' = s.' || COLUMN_NAME  || '~ AND '), ' AND '), '~')  AS "BusKeyJoin"
+				,TRIM(RTRIM(LISTAGG(' t1.' || COLUMN_NAME || ' = s.' || COLUMN_NAME  || '~ AND '), 'AND '), '~')  AS "BusKeyJoin_t1"
+				,TRIM(RTRIM(LISTAGG(' t2.' || COLUMN_NAME || ' = s.' || COLUMN_NAME  || '~ AND '), 'AND '), '~')  AS "BusKeyJoin_t2"
+				,TRIM(RTRIM(LISTAGG(' nc.' || COLUMN_NAME || ' = s.' || COLUMN_NAME  || '~ AND '), 'AND '), '~')  AS "BusKeyJoin_nc"
+				,TRIM(RTRIM(LISTAGG(' src.' || COLUMN_NAME || ' = dst.' || COLUMN_NAME  || '~ AND '), 'AND '), '~')  AS "BusKeyJoin_src"
 			FROM base`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();
