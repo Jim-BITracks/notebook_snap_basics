@@ -19,7 +19,7 @@ CREATE OR REPLACE PROCEDURE /*${snowflake_Schema}*/"STG"/**/.BUILD_AND_EXECUTE_M
 																	  EDW_DATABASE VARCHAR)
     RETURNS STRING
 	LANGUAGE JAVASCRIPT	
-	COMMENT = "Created by: Jerry Simpson"
+	COMMENT = "Created by: Jerry Simpson (BI Tracks Consulting)"
 AS $$
 
 try {
