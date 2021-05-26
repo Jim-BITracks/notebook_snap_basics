@@ -149,7 +149,7 @@ sql = `WITH base AS
 			   ON t1.COLUMN_NAME = c.COLUMN_NAME
 			ORDER BY c.ORDINAL_POSITION
 		)
-		SELECT TRIM(LISTAGG(' IFNULL(r.' || column_name || ','''') != IFNULL(s.' || column_name || ','''')' || ' OR '), 'OR ')
+		SELECT TRIM(LISTAGG(' IFNULL(CAST(r.' || column_name || ' AS VARCHAR),'''') != IFNULL(CAST(s.' || column_name || ' AS VARCHAR),'''')' || ' OR '), 'OR ')
 			FROM base;`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();
@@ -170,7 +170,7 @@ sql = `WITH base AS
 			   ON t1.COLUMN_NAME = c.COLUMN_NAME
 			ORDER BY c.ORDINAL_POSITION
 		)
-		SELECT TRIM(LISTAGG(' IFNULL(r.' || column_name || ','''') != IFNULL(s.' || column_name || ','''')' || ' OR '), 'OR ')
+		SELECT TRIM(LISTAGG(' IFNULL(CAST(r.' || column_name || ' AS VARCHAR(8000)),'''') != IFNULL(CAST(s.' || column_name || ' AS VARCHAR(8000)),'''')' || ' OR '), 'OR ')
 			FROM base;`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();
@@ -330,11 +330,11 @@ MergeRowsUpdated = cmd_res.getColumnValue(2);
 
 // outer merge insert (used only for type 2 new rows)
 sql = `INSERT INTO ` + edw_table_full + ` ( ` + MergeInsertList + `
-				 , row_is_current
-				 , row_effective_date
-				 , row_expiration_date
-				 , row_insert_date
-			     , row_update_date
+				 , ` + row_is_current + `
+				 , ` + row_effective_date + `
+				 , ` + row_expiration_date + `
+				 , ` + row_insert_date + `
+			     , ` + row_update_date + `
 			 )
 		SELECT ` + MergeInsertList + `
 			 , 'Y'
@@ -355,4 +355,5 @@ catch (err)
 return err.message
 }
 return MergeRowsInserted + MergeRowsUpdated + RowsInserted
+
  $$;
