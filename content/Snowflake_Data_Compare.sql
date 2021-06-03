@@ -1,3 +1,9 @@
+
+/*
+Jerry - please use SRC for 'Source' table and TGT for 'Target' table (instead of STG and EDW)
+also reference 'NATURAL_KEY' instead of 'BUSINESS_KEY'
+*/
+
 CREATE OR REPLACE PROCEDURE SNOWFLAKE_DATA_COMPARE (STG_SCHEMA VARCHAR, 
 														  STG_TABLE VARCHAR, 
 														  EDW_SCHEMA VARCHAR, 
