@@ -1,19 +1,13 @@
-
-/*
-Jerry - please use SRC for 'Source' table and TGT for 'Target' table (instead of STG and EDW)
-also reference 'NATURAL_KEY' instead of 'BUSINESS_KEY'
-*/
-
 CREATE OR REPLACE PROCEDURE SNOWFLAKE_DATA_COMPARE (STG_SCHEMA VARCHAR, 
 														  STG_TABLE VARCHAR, 
-														  EDW_SCHEMA VARCHAR, 
-														  EDW_TABLE VARCHAR,  
-														  BUSINESS_KEY_COLUMNS VARCHAR, 
+														  TGT_SCHEMA VARCHAR, 
+														  TGT_TABLE VARCHAR,  
+														  NATURAL_KEY_COLUMNS VARCHAR, 
 														  IGNORE_COLUMNS VARCHAR, 
 														  SOURCE_WHERE_CLAUSE VARCHAR, 
 														  DESTINATION_WHERE_CLAUSE VARCHAR,
 														  STG_DATABASE VARCHAR, 
-														  EDW_DATABASE VARCHAR)
+														  TGT_DATABASE VARCHAR)
 	RETURNS STRING 
 	LANGUAGE JAVASCRIPT
 	COMMENT = "Created by: Jerry Simpson"
@@ -23,12 +17,12 @@ AS $$
 //{
 
 stg_table_full = STG_DATABASE + '.' + STG_SCHEMA + '.' + STG_TABLE
-edw_table_full = EDW_DATABASE + '.' + EDW_SCHEMA + '.' + EDW_TABLE
+tgt_table_full = TGT_DATABASE + '.' + TGT_SCHEMA + '.' + TGT_TABLE
 
 
-if ( BUSINESS_KEY_COLUMNS == '' )
+if ( NATURAL_KEY_COLUMNS == '' )
 	{
-		return 'No Business key(s) found'
+		return 'No Natural key(s) found'
 	}
 
 if ( STG_DATABASE == '' )	
@@ -37,9 +31,9 @@ if ( STG_DATABASE == '' )
 		 stg_info_schema = 'INFORMATION_SCHEMA.COLUMNS'
 	}
  
-if ( EDW_DATABASE == '' )	
+if ( TGT_DATABASE == '' )	
 	{
-		 edw_table_full = EDW_SCHEMA + '.' + EDW_TABLE
+		 tgt_table_full = TGT_SCHEMA + '.' + TGT_TABLE
 	}
 
 if ( IGNORE_COLUMNS != '' )
@@ -56,7 +50,7 @@ else
 
 
 //Populate temp table with staging table columns
-sql = `CREATE OR REPLACE TEMPORARY TABLE source_table AS 
+sql = `CREATE OR REPLACE TEMPORARY TABLE src_table AS 
 			SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, ORDINAL_POSITION, 'NULL' AS IS_NULLABLE, DATA_TYPE
 			, CASE WHEN DATA_TYPE IN ('NUMBER','DECIMAL') THEN NUMERIC_PRECISION::VARCHAR || ',' || NUMERIC_SCALE::VARCHAR ELSE CHARACTER_MAXIMUM_LENGTH::VARCHAR END AS "COLUMN_LENGTH" 
 			, COLLATION_NAME
@@ -69,67 +63,67 @@ cmd_res = snowflake.execute({sqlText: sql});
 
 
 //Populate temp table with destination table columns
-sql = `CREATE OR REPLACE TEMPORARY TABLE dst_table AS 
+sql = `CREATE OR REPLACE TEMPORARY TABLE tgt_table AS 
 			SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, ORDINAL_POSITION, 'NULL' AS IS_NULLABLE, DATA_TYPE
 			, CASE WHEN DATA_TYPE IN ('NUMBER','DECIMAL') THEN NUMERIC_PRECISION::VARCHAR || ',' || NUMERIC_SCALE::VARCHAR ELSE CHARACTER_MAXIMUM_LENGTH::VARCHAR END AS "COLUMN_LENGTH" 
 			, COLLATION_NAME
 			FROM INFORMATION_SCHEMA.COLUMNS
-			WHERE TABLE_SCHEMA = '` + EDW_SCHEMA + `'
-			AND TABLE_NAME = '` + EDW_TABLE + `'
+			WHERE TABLE_SCHEMA = '` + TGT_SCHEMA + `'
+			AND TABLE_NAME = '` + TGT_TABLE + `'
 			AND COLUMN_NAME NOT IN (` + ignore_columns_list + `)
 			ORDER BY ORDINAL_POSITION; `
 cmd_res = snowflake.execute({sqlText: sql});
 
 
-// Create business key table
-sql = `CREATE OR REPLACE TEMPORARY TABLE BUSINESS_KEY_COLUMNS AS
+// Create natural key table
+sql = `CREATE OR REPLACE TEMPORARY TABLE NATURAL_KEY_COLUMNS AS
 		WITH CTE (KEY_COLUMN) AS (
-		SELECT '` + BUSINESS_KEY_COLUMNS + `' AS KEY_COLUMN)
+		SELECT '` + NATURAL_KEY_COLUMNS + `' AS KEY_COLUMN)
 		SELECT TRIM(VALUE) AS COLUMN_NAME
 		FROM CTE, table(SPLIT_TO_TABLE(KEY_COLUMN,','))` 
 cmd_res = snowflake.execute({sqlText: sql});
 
 
-//Staging Business Key Select/Join
+//Staging Natural Key Select/Join
 sql = `WITH base AS
 		(
 		   SELECT DISTINCT TOP 1000 c.ORDINAL_POSITION
 				, c.COLUMN_NAME 
-			 FROM source_table c
-			 JOIN BUSINESS_KEY_COLUMNS m
+			 FROM src_table c
+			 JOIN NATURAL_KEY_COLUMNS m
 			   ON m.COLUMN_NAME = c.COLUMN_NAME
 			ORDER BY c.ORDINAL_POSITION
 		)
 		  SELECT TRIM(LISTAGG(' SRC.' || COLUMN_NAME || ', '), ', ') || ' ' AS "SELECT"
-				,REPLACE(REPLACE(LISTAGG(' DST.' || COLUMN_NAME || ' = SRC.' || COLUMN_NAME  || ' AND ~') || '~','AND ~~'), '~')  AS "BusKeyJoin"
-				,REPLACE(REPLACE(LISTAGG('SRC.' || COLUMN_NAME || ' IS NULL AND ~') || '~','AND ~~'), '~') AS "SrcBusKeyWhere"
+				,REPLACE(REPLACE(LISTAGG(' DST.' || COLUMN_NAME || ' = SRC.' || COLUMN_NAME  || ' AND ~') || '~','AND ~~'), '~')  AS "NatKeyJoin"
+				,REPLACE(REPLACE(LISTAGG('SRC.' || COLUMN_NAME || ' IS NULL AND ~') || '~','AND ~~'), '~') AS "SrcNatKeyWhere"
 			FROM base`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();
-StagingBusKeySelect = cmd_res.getColumnValue(1);
-StagingBusKeyJoin = cmd_res.getColumnValue(2);
-StagingBusKeyWHERE = cmd_res.getColumnValue(3);
+StagingNatKeySelect = cmd_res.getColumnValue(1);
+StagingNatKeyJoin = cmd_res.getColumnValue(2);
+StagingNatKeyWHERE = cmd_res.getColumnValue(3);
 
 
-//Destination Business Key Select/Join
+//Destination Natural Key Select/Join
 sql = `WITH base AS
 		(
 		   SELECT DISTINCT TOP 1000 c.ORDINAL_POSITION
 				, c.COLUMN_NAME
-			 FROM dst_table c
-			 JOIN BUSINESS_KEY_COLUMNS m
+			 FROM tgt_table c
+			 JOIN NATURAL_KEY_COLUMNS m
 			   ON m.COLUMN_NAME = c.COLUMN_NAME
 			ORDER BY c.ORDINAL_POSITION
 		)
 		  SELECT TRIM(LISTAGG(' SRC.' || COLUMN_NAME || ', '), ', ') || ' ' AS "SELECT"
-				,REPLACE(REPLACE(LISTAGG(' DST.' || COLUMN_NAME || ' = SRC.' || COLUMN_NAME  || ' AND ~') || '~','AND ~~'), '~')  AS "BusKeyJoin"
-				,REPLACE(REPLACE(LISTAGG('DST.' || COLUMN_NAME || ' IS NULL AND ~') || '~','AND ~~'), '~') AS "DestBusKeyWhere"
+				,REPLACE(REPLACE(LISTAGG(' DST.' || COLUMN_NAME || ' = SRC.' || COLUMN_NAME  || ' AND ~') || '~','AND ~~'), '~')  AS "NatKeyJoin"
+				,REPLACE(REPLACE(LISTAGG('DST.' || COLUMN_NAME || ' IS NULL AND ~') || '~','AND ~~'), '~') AS "DestNatKeyWhere"
 			FROM base`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();
-DstBusKeySelect = cmd_res.getColumnValue(1);
-DstBusKeyJoin = cmd_res.getColumnValue(2);
-DstBusKeyWHERE = cmd_res.getColumnValue(3);
+DstNatKeySelect = cmd_res.getColumnValue(1);
+DstNatKeyJoin = cmd_res.getColumnValue(2);
+DstNatKeyWHERE = cmd_res.getColumnValue(3);
 
 
 // Staging Columns
@@ -137,8 +131,8 @@ sql = `WITH base AS
 		(
 		   SELECT DISTINCT TOP 1000 c.ORDINAL_POSITION
 				, c.COLUMN_NAME
-			 FROM source_table c
-			 LEFT JOIN BUSINESS_KEY_COLUMNS bk
+			 FROM src_table c
+			 LEFT JOIN NATURAL_KEY_COLUMNS bk
 				ON bk.COLUMN_NAME = c.COLUMN_NAME
 			WHERE bk.COLUMN_NAME IS NULL
 			ORDER BY c.ORDINAL_POSITION
@@ -157,8 +151,8 @@ sql = `WITH base AS
 		(
 		   SELECT DISTINCT TOP 1000 c.ORDINAL_POSITION
 				, c.COLUMN_NAME
-			 FROM source_table c
-			 LEFT JOIN BUSINESS_KEY_COLUMNS bk
+			 FROM src_table c
+			 LEFT JOIN NATURAL_KEY_COLUMNS bk
 				ON bk.COLUMN_NAME = c.COLUMN_NAME
 			WHERE bk.COLUMN_NAME IS NULL
 			ORDER BY c.ORDINAL_POSITION
