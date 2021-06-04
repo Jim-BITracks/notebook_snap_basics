@@ -80,7 +80,7 @@ sql = `CREATE OR REPLACE TEMPORARY TABLE NATURAL_KEY_COLUMNS AS
 		WITH CTE (KEY_COLUMN) AS (
 		SELECT '` + NATURAL_KEY_COLUMNS + `' AS KEY_COLUMN)
 		SELECT TRIM(VALUE) AS COLUMN_NAME
-		FROM CTE, table(SPLIT_TO_TABLE(KEY_COLUMN,','))` 
+		FROM CTE, table(SPLIT_TO_TABLE(KEY_COLUMN,','));` 
 cmd_res = snowflake.execute({sqlText: sql});
 
 
@@ -94,15 +94,17 @@ sql = `WITH base AS
 			   ON m.COLUMN_NAME = c.COLUMN_NAME
 			ORDER BY c.ORDINAL_POSITION
 		)
-		  SELECT TRIM(LISTAGG(' SRC.' || COLUMN_NAME || ', '), ', ') || ' ' AS "SELECT"
-				,REPLACE(REPLACE(LISTAGG(' DST.' || COLUMN_NAME || ' = SRC.' || COLUMN_NAME  || ' AND ~') || '~','AND ~~'), '~')  AS "NatKeyJoin"
-				,REPLACE(REPLACE(LISTAGG('SRC.' || COLUMN_NAME || ' IS NULL AND ~') || '~','AND ~~'), '~') AS "SrcNatKeyWhere"
-			FROM base`
+		  SELECT TRIM(LISTAGG(' src.' || COLUMN_NAME || ', '), ', ') || ' ' AS "SELECT"
+				,REPLACE(REPLACE(LISTAGG(' tgt.' || COLUMN_NAME || ' = src.' || COLUMN_NAME  || ' AND ~') || '~','AND ~~'), '~')  AS "NatKeyJoin"
+				,REPLACE(REPLACE(LISTAGG('src.' || COLUMN_NAME || ' IS NULL AND ~') || '~','AND ~~'), '~') AS "SrcNatKeyWhere"
+				,RTRIM(LISTAGG('src.' || COLUMN_NAME || ' || '', '' || '),' || '', '' || ') AS "StagingNatKeyValue"
+			FROM base;`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();
 StagingNatKeySelect = cmd_res.getColumnValue(1);
 StagingNatKeyJoin = cmd_res.getColumnValue(2);
 StagingNatKeyWHERE = cmd_res.getColumnValue(3);
+StagingNatKeyValue = cmd_res.getColumnValue(4);
 
 
 //Destination Natural Key Select/Join
@@ -115,15 +117,17 @@ sql = `WITH base AS
 			   ON m.COLUMN_NAME = c.COLUMN_NAME
 			ORDER BY c.ORDINAL_POSITION
 		)
-		  SELECT TRIM(LISTAGG(' SRC.' || COLUMN_NAME || ', '), ', ') || ' ' AS "SELECT"
-				,REPLACE(REPLACE(LISTAGG(' DST.' || COLUMN_NAME || ' = SRC.' || COLUMN_NAME  || ' AND ~') || '~','AND ~~'), '~')  AS "NatKeyJoin"
-				,REPLACE(REPLACE(LISTAGG('DST.' || COLUMN_NAME || ' IS NULL AND ~') || '~','AND ~~'), '~') AS "DestNatKeyWhere"
-			FROM base`
+		  SELECT TRIM(LISTAGG(' tgt.' || COLUMN_NAME || ', '), ', ') || ' ' AS "SELECT"
+				,REPLACE(REPLACE(LISTAGG(' tgt.' || COLUMN_NAME || ' = src.' || COLUMN_NAME  || ' AND ~') || '~','AND ~~'), '~')  AS "NatKeyJoin"
+				,REPLACE(REPLACE(LISTAGG('tgt.' || COLUMN_NAME || ' IS NULL AND ~') || '~','AND ~~'), '~') AS "DestNatKeyWhere"
+				,RTRIM(LISTAGG('tgt.' || COLUMN_NAME || ' || '''', '''' || '),' || '''', '''' || ') AS "DstNatKeyValue"
+			FROM base;`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();
 DstNatKeySelect = cmd_res.getColumnValue(1);
 DstNatKeyJoin = cmd_res.getColumnValue(2);
 DstNatKeyWHERE = cmd_res.getColumnValue(3);
+DstNatKeyValue = cmd_res.getColumnValue(4);
 
 
 // Staging Columns
@@ -138,12 +142,24 @@ sql = `WITH base AS
 			ORDER BY c.ORDINAL_POSITION
 		)
 		SELECT TRIM(LISTAGG(' src.' || COLUMN_NAME || '' || ', '), ', ')
-				, REPLACE(REPLACE(LISTAGG(' src.' || COLUMN_NAME || ' <> dst.' || COLUMN_NAME  || ' OR ~') || '~','OR ~~'), '~') 
+				, REPLACE(REPLACE(LISTAGG(' src.' || COLUMN_NAME || ' <> tgt.' || COLUMN_NAME  || ' OR ~') || '~','OR ~~'), '~') 
+				, TRIM(LISTAGG('''' || COLUMN_NAME || '''' || ', '), ', ')
+				, REPLACE(REPLACE(LISTAGG('\n SELECT ''Different Values'' AS Type_Code
+				        , ` + DstNatKeyValue + ` AS Natural_Key_Value
+				        , CASE WHEN tgt.' || COLUMN_NAME || ' <> src.' || COLUMN_NAME || ' THEN ''' || COLUMN_NAME || ''' END AS COLUMN_DIFFERENT              
+				        , src.' || COLUMN_NAME || ' AS Source_Value
+				        , tgt.' || COLUMN_NAME || ' AS Dest_Value
+				FROM ` + tgt_table_full + ` tgt
+				JOIN ` + stg_table_full + ` src
+				    ON ` + StagingNatKeyJoin + `
+				WHERE COLUMN_DIFFERENT IS NOT NULL' || '\n UNION ~') || '~', 'UNION ~~'),'~')
 			FROM base;`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next(); 
 StagingColumns = cmd_res.getColumnValue(1); 
 StagingWhereClause = cmd_res.getColumnValue(2);
+StagingColumnsNoAlias = cmd_res.getColumnValue(3); 
+Difference_SELECT = cmd_res.getColumnValue(4); 
 
 
 // Destination Columns
@@ -157,7 +173,7 @@ sql = `WITH base AS
 			WHERE bk.COLUMN_NAME IS NULL
 			ORDER BY c.ORDINAL_POSITION
 		)
-		SELECT TRIM(LISTAGG(' dst.' || COLUMN_NAME || '' || ', '), ', ')
+		SELECT TRIM(LISTAGG(' tgt.' || COLUMN_NAME || '' || ', '), ', ')
 			FROM base;`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next(); 
@@ -165,65 +181,33 @@ DstColumns = cmd_res.getColumnValue(1);
 
 
 //Difference Statement
+sql = `WITH Difference_Check AS ( ` + Difference_SELECT + ` 
+						)
+		, SRC_ONLY AS (SELECT 'Only In Source' AS Type_Code
+								, ` + StagingNatKeyValue + ` AS Natural_Key_Value
+								, NULL AS COLUMN_DIFFERENT
+								, NULL AS Source_Value
+								, NULL AS Dest_Value
+		                  FROM ` + stg_table_full + ` src
+		                  LEFT JOIN ` + tgt_table_full + ` tgt
+		                    ON ` + StagingNatKeyJoin + `
+		                  WHERE ` + DstNatKeyWHERE + `
+		                  )
+		, TGT_ONLY AS (SELECT 'Only In Destination' AS Type_Code
+								, ` + DstNatKeyValue + ` AS Natural_Key_Value
+								, NULL AS COLUMN_DIFFERENT
+								, NULL AS Source_Value
+								, NULL AS Dest_Value
+		                  FROM ` + tgt_table_full + ` tgt
+		                  LEFT JOIN ` + stg_table_full + ` src
+		                    ON ` + StagingNatKeyJoin + `
+		                  WHERE ` + StagingNatKeyWHERE + `
+		                  )
+		SELECT * FROM src_ONLY
+		UNION 
+		SELECT * FROM tgt_ONLY
+		UNION
+		SELECT * FROM Difference_Check
+		`
 
-/*	to automate				*/
-
-WITH Difference_Check AS (
-	              SELECT    'Different Values' AS Type_Code
-	              		  , DST.VEHICLE_TYPE_CODE_2 AS Natural_Key_Value
-	                      , CASE WHEN dst.VEHICLE_TYPE_CODE_5 <> SRC.VEHICLE_TYPE_CODE_5 THEN 'VEHICLE_TYPE_CODE_5' END AS COLUMN_DIFFERENT
-	              		  , SRC.VEHICLE_TYPE_CODE_5 AS Source_Value
-	                      , dst.VEHICLE_TYPE_CODE_5 AS Dest_Value
-	              FROM EDW.D_VEHICLE dst
-	              JOIN STG.D_VEHICLE src
-	                  ON  DST.VEHICLE_TYPE_CODE_2 = SRC.VEHICLE_TYPE_CODE_2
-	              WHERE COLUMN_DIFFERENT IS NOT NULL
-	              union
-	              SELECT    'Different Values' AS Type_Code
-	              		  , DST.VEHICLE_TYPE_CODE_2 AS Natural_Key_Value
-	                      , CASE WHEN dst.VEHICLE_TYPE_CODE_4 <> SRC.VEHICLE_TYPE_CODE_4 THEN 'VEHICLE_TYPE_CODE_4' END AS COLUMN_DIFFERENT
-	              		  , SRC.VEHICLE_TYPE_CODE_4 AS Source_Value
-	                      , dst.VEHICLE_TYPE_CODE_4 AS Dest_Value
-	              FROM EDW.D_VEHICLE dst
-	              JOIN STG.D_VEHICLE src
-	                  ON  DST.VEHICLE_TYPE_CODE_2 = SRC.VEHICLE_TYPE_CODE_2
-	              WHERE COLUMN_DIFFERENT IS NOT NULL
-	              union
-	              SELECT     'Different Values' AS Type_Code
-	              		  , DST.VEHICLE_TYPE_CODE_2 AS Natural_Key_Value
-	                      , CASE WHEN dst.VEHICLE_TYPE_CODE_3 <> SRC.VEHICLE_TYPE_CODE_3 THEN 'VEHICLE_TYPE_CODE_3' END AS COLUMN_DIFFERENT              
-	                      , SRC.VEHICLE_TYPE_CODE_3 AS Source_Value
-	                      , dst.VEHICLE_TYPE_CODE_3 AS Dest_Value
-	              FROM EDW.D_VEHICLE dst
-	              JOIN STG.D_VEHICLE src
-	                  ON  DST.VEHICLE_TYPE_CODE_2 = SRC.VEHICLE_TYPE_CODE_2
-	              WHERE COLUMN_DIFFERENT IS NOT NULL
-				)
-, SRC_ONLY AS (SELECT 'Only In Source' AS Type_Code
-						, src.VEHICLE_TYPE_CODE_2 AS Natural_Key_Value
-						, NULL AS COLUMN_DIFFERENT
-						, NULL AS Source_Value
-						, NULL AS Dest_Value
-                  FROM STG.D_VEHICLE src
-                  LEFT JOIN EDW.D_VEHICLE dst
-                    ON dst.VEHICLE_TYPE_CODE_2 = src.VEHICLE_TYPE_CODE_2
-                  WHERE dst.VEHICLE_TYPE_CODE_2 IS NULL
-                  )
-, DST_ONLY AS (SELECT 'Only In Destination' AS Type_Code
-						, dst.VEHICLE_TYPE_CODE_2 AS Natural_Key_Value
-						, NULL AS COLUMN_DIFFERENT
-						, NULL AS Source_Value
-						, NULL AS Dest_Value
-                  FROM EDW.D_VEHICLE dst
-                  LEFT JOIN STG.D_VEHICLE src
-                    ON dst.VEHICLE_TYPE_CODE_2 = src.VEHICLE_TYPE_CODE_2
-                  WHERE src.VEHICLE_TYPE_CODE_2 IS NULL
-                  )
-SELECT * FROM SRC_ONLY
-UNION 
-SELECT * FROM DST_ONLY
-UNION
-SELECT * FROM Difference_Check
-  
-
-
+return sql
