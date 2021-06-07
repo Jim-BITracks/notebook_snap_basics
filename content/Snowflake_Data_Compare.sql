@@ -1,4 +1,4 @@
-CREATE OR REPLACE PROCEDURE SNOWFLAKE_DATA_COMPARE (STG_SCHEMA VARCHAR, 
+CREATE OR REPLACE PROCEDURE STG.SNOWFLAKE_DATA_COMPARE (STG_SCHEMA VARCHAR, 
 														  STG_TABLE VARCHAR, 
 														  TGT_SCHEMA VARCHAR, 
 														  TGT_TABLE VARCHAR,  
@@ -13,8 +13,8 @@ CREATE OR REPLACE PROCEDURE SNOWFLAKE_DATA_COMPARE (STG_SCHEMA VARCHAR,
 	COMMENT = "Created by: Jerry Simpson"
 AS $$
 
-//try 
-//{
+try 
+{
 
 stg_table_full = STG_DATABASE + '.' + STG_SCHEMA + '.' + STG_TABLE
 tgt_table_full = TGT_DATABASE + '.' + TGT_SCHEMA + '.' + TGT_TABLE
@@ -46,6 +46,26 @@ if ( IGNORE_COLUMNS != '' )
 else 
 	{
 		ignore_columns_list = `''`
+	}
+
+
+if ( SOURCE_WHERE_CLAUSE != '' ) 
+	{
+	SOURCE_WHERE = SOURCE_WHERE_CLAUSE.split("'").join("''")
+	}
+else 
+	{
+	SOURCE_WHERE = ''
+	}
+
+
+if ( DESTINATION_WHERE_CLAUSE != '' ) 
+	{
+	TARGET_WHERE = DESTINATION_WHERE_CLAUSE.split("'").join("''")
+	}
+else 
+	{
+	TARGET_WHERE = ''
 	}
 
 
@@ -120,7 +140,8 @@ sql = `WITH base AS
 		  SELECT TRIM(LISTAGG(' tgt.' || COLUMN_NAME || ', '), ', ') || ' ' AS "SELECT"
 				,REPLACE(REPLACE(LISTAGG(' tgt.' || COLUMN_NAME || ' = src.' || COLUMN_NAME  || ' AND ~') || '~','AND ~~'), '~')  AS "NatKeyJoin"
 				,REPLACE(REPLACE(LISTAGG('tgt.' || COLUMN_NAME || ' IS NULL AND ~') || '~','AND ~~'), '~') AS "DestNatKeyWhere"
-				,RTRIM(LISTAGG('tgt.' || COLUMN_NAME || ' || '''', '''' || '),' || '''', '''' || ') AS "DstNatKeyValue"
+				,RTRIM(LISTAGG('tgt.' || COLUMN_NAME || ' || '''', '''' || '),' || '''', '''' || ') AS "DstNatKeyValue1"
+				,RTRIM(LISTAGG('tgt.' || COLUMN_NAME || ' || '', '' || '),' || '', '' || ') AS "DstNatKeyValue2"
 			FROM base;`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();
@@ -128,6 +149,7 @@ DstNatKeySelect = cmd_res.getColumnValue(1);
 DstNatKeyJoin = cmd_res.getColumnValue(2);
 DstNatKeyWHERE = cmd_res.getColumnValue(3);
 DstNatKeyValue = cmd_res.getColumnValue(4);
+DstNatKeyValue2 = cmd_res.getColumnValue(5);
 
 
 // Staging Columns
@@ -141,18 +163,18 @@ sql = `WITH base AS
 			WHERE bk.COLUMN_NAME IS NULL
 			ORDER BY c.ORDINAL_POSITION
 		)
-		SELECT TRIM(LISTAGG(' src.' || COLUMN_NAME || '' || ', '), ', ')
-				, REPLACE(REPLACE(LISTAGG(' src.' || COLUMN_NAME || ' <> tgt.' || COLUMN_NAME  || ' OR ~') || '~','OR ~~'), '~') 
-				, TRIM(LISTAGG('''' || COLUMN_NAME || '''' || ', '), ', ')
+		SELECT TRIM(LISTAGG(' src.' || COLUMN_NAME || '' || ', '), ', ') AS "STAGING_COLUMNS"
+				, REPLACE(REPLACE(LISTAGG(' src.' || COLUMN_NAME || ' <> tgt.' || COLUMN_NAME  || ' OR ~') || '~','OR ~~'), '~') AS "STAGING_WHERE_CLAUSE"
+				, TRIM(LISTAGG('''' || COLUMN_NAME || '''' || ', '), ', ') AS "STAGING_COLUMNS_NO_ALIAS"
 				, REPLACE(REPLACE(LISTAGG('\n SELECT ''Different Values'' AS Type_Code
 				        , ` + DstNatKeyValue + ` AS Natural_Key_Value
 				        , CASE WHEN tgt.' || COLUMN_NAME || ' <> src.' || COLUMN_NAME || ' THEN ''' || COLUMN_NAME || ''' END AS COLUMN_DIFFERENT              
 				        , src.' || COLUMN_NAME || ' AS Source_Value
 				        , tgt.' || COLUMN_NAME || ' AS Dest_Value
-				FROM ` + tgt_table_full + ` tgt
-				JOIN ` + stg_table_full + ` src
+				FROM (SELECT * FROM ` + tgt_table_full + ' ' + TARGET_WHERE + `) tgt
+				JOIN (SELECT * FROM ` + stg_table_full + ' ' + SOURCE_WHERE + `) src
 				    ON ` + StagingNatKeyJoin + `
-				WHERE COLUMN_DIFFERENT IS NOT NULL' || '\n UNION ~') || '~', 'UNION ~~'),'~')
+				WHERE COLUMN_DIFFERENT IS NOT NULL' || '\n UNION ~') || '~', 'UNION ~~'),'~') AS "DIFFERENCE_SELECT"
 			FROM base;`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next(); 
@@ -160,6 +182,8 @@ StagingColumns = cmd_res.getColumnValue(1);
 StagingWhereClause = cmd_res.getColumnValue(2);
 StagingColumnsNoAlias = cmd_res.getColumnValue(3); 
 Difference_SELECT = cmd_res.getColumnValue(4); 
+
+
 
 
 // Destination Columns
@@ -181,7 +205,8 @@ DstColumns = cmd_res.getColumnValue(1);
 
 
 //Difference Statement
-sql = `WITH Difference_Check AS ( ` + Difference_SELECT + ` 
+sql = `CREATE OR REPLACE TABLE ` + STG_SCHEMA + `.Data_Compare_Table AS
+		WITH Difference_Check AS ( ` + Difference_SELECT + ` 
 						)
 		, SRC_ONLY AS (SELECT 'Only In Source' AS Type_Code
 								, ` + StagingNatKeyValue + ` AS Natural_Key_Value
@@ -194,7 +219,7 @@ sql = `WITH Difference_Check AS ( ` + Difference_SELECT + `
 		                  WHERE ` + DstNatKeyWHERE + `
 		                  )
 		, TGT_ONLY AS (SELECT 'Only In Destination' AS Type_Code
-								, ` + DstNatKeyValue + ` AS Natural_Key_Value
+								, ` + DstNatKeyValue2 + ` AS Natural_Key_Value
 								, NULL AS COLUMN_DIFFERENT
 								, NULL AS Source_Value
 								, NULL AS Dest_Value
@@ -203,11 +228,26 @@ sql = `WITH Difference_Check AS ( ` + Difference_SELECT + `
 		                    ON ` + StagingNatKeyJoin + `
 		                  WHERE ` + StagingNatKeyWHERE + `
 		                  )
-		SELECT * FROM src_ONLY
+		SELECT TYPE_CODE, Natural_Key_Value, COLUMN_DIFFERENT, Source_Value, Dest_Value 
+		FROM src_ONLY
 		UNION 
-		SELECT * FROM tgt_ONLY
+		SELECT TYPE_CODE, Natural_Key_Value, COLUMN_DIFFERENT, Source_Value, Dest_Value 
+		FROM tgt_ONLY
 		UNION
-		SELECT * FROM Difference_Check
+		SELECT TYPE_CODE, Natural_Key_Value, COLUMN_DIFFERENT, Source_Value, Dest_Value
+		FROM Difference_Check
 		`
-
+cmd_res = snowflake.execute({sqlText: sql});
+cmd_res.next();
+//return 'Table ' + STG_SCHEMA + '.DATA_COMPARE_TABLE successfully created.';
 return sql
+}
+catch (err)
+{
+return err.message
+}
+
+
+$$;
+
+
