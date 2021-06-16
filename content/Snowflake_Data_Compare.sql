@@ -1,3 +1,12 @@
+/*
+{
+"notebooksnap": {
+        "cell_name": "Create Data Compare Procedure (snowflake)",
+        "connection": "snowflake-demo",
+        "pattern": "Execute SQL"
+    }
+}
+*/
 CREATE OR REPLACE PROCEDURE STG.SNOWFLAKE_DATA_COMPARE (SRC_DATABASE VARCHAR, 
 														  SRC_SCHEMA VARCHAR, 
 														  SRC_TABLE VARCHAR,
