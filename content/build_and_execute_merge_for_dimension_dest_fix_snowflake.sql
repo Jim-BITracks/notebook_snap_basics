@@ -7,7 +7,7 @@
     }
 }
 */
-CREATE OR REPLACE PROCEDURE /*${snowflake_Schema}*/"STG"/**/.BUILD_AND_EXECUTE_MERGE_FOR_DIMENSION_DEST_REPAIR (STG_SCHEMA VARCHAR, 
+CREATE OR REPLACE PROCEDURE /*${snowflake_Schema}*/STG/**/.BUILD_AND_EXECUTE_MERGE_FOR_DIMENSION_DEST_REPAIR (STG_SCHEMA VARCHAR,
 																				  STG_TABLE VARCHAR, 
 																				  EDW_SCHEMA VARCHAR, 
 																				  EDW_TABLE VARCHAR, 
@@ -19,7 +19,7 @@ CREATE OR REPLACE PROCEDURE /*${snowflake_Schema}*/"STG"/**/.BUILD_AND_EXECUTE_M
 																				  EDW_DATABASE VARCHAR)
 	RETURNS STRING 
 	LANGUAGE JAVASCRIPT
-	COMMENT = "Created by: Jerry Simpson (BI Tracks Consulting)"
+	COMMENT = 'Created by: Jerry Simpson (BI Tracks Consulting)'
 AS $$
 
 try 
