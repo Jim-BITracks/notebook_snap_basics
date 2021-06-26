@@ -227,7 +227,7 @@ sql = `WITH base AS
 				        , ` + DstNatKeyValue + ` AS Natural_Key_Value
 				        , CASE WHEN tgt.' || COLUMN_NAME || ' <> src.' || COLUMN_NAME || ' THEN ''' || COLUMN_NAME || ''' END AS COLUMN_DIFFERENT              
 				        , src.' || COLUMN_NAME || ' AS Source_Value
-				        , tgt.' || COLUMN_NAME || ' AS Dest_Value
+				        , tgt.' || COLUMN_NAME || ' AS Target_Value
 				FROM (SELECT DST_COLUMNS_HERE FROM ` + tgt_table_full + ' ' + TARGET_WHERE + `) tgt
 				JOIN (SELECT * FROM ` + stg_table_full + ' ' + SOURCE_WHERE + `) src
 				    ON ` + StagingNatKeyJoin + `
@@ -277,7 +277,7 @@ sql = `WITH Difference_Check AS ( ` + Difference_SELECT_final + ` )
 								, ` + StagingNatKeyValue + ` AS Natural_Key_Value
 								, NULL AS COLUMN_DIFFERENT
 								, NULL AS Source_Value
-								, NULL AS Dest_Value
+								, NULL AS Target_Value
 		                  FROM ` + stg_table_full + ` src
 		                  LEFT JOIN ` + tgt_table_full + ` tgt
 		                    ON ` + StagingNatKeyJoin + `
@@ -289,19 +289,19 @@ sql = `WITH Difference_Check AS ( ` + Difference_SELECT_final + ` )
 								, ` + DstNatKeyValue2 + ` AS Natural_Key_Value
 								, NULL AS COLUMN_DIFFERENT
 								, NULL AS Source_Value
-								, NULL AS Dest_Value
+								, NULL AS Target_Value
 		                  FROM ` + tgt_table_full + ` tgt
 		                  LEFT JOIN ` + stg_table_full + ` src
 		                    ON ` + StagingNatKeyJoin + `
 		                  WHERE ` + StagingNatKeyWHERE + `
 		                  )
-		SELECT COMPARE_INSERT_DATE, TYPE_CODE, TABLE_NAME, Natural_Key_Value, COLUMN_DIFFERENT, Source_Value, Dest_Value 
+		SELECT COMPARE_INSERT_DATE, TYPE_CODE, TABLE_NAME, Natural_Key_Value, COLUMN_DIFFERENT, Source_Value, Target_Value 
 		FROM src_ONLY
 		UNION 
-		SELECT COMPARE_INSERT_DATE, TYPE_CODE, TABLE_NAME, Natural_Key_Value, COLUMN_DIFFERENT, Source_Value, Dest_Value 
+		SELECT COMPARE_INSERT_DATE, TYPE_CODE, TABLE_NAME, Natural_Key_Value, COLUMN_DIFFERENT, Source_Value, Target_Value 
 		FROM tgt_ONLY
 		UNION
-		SELECT COMPARE_INSERT_DATE, TYPE_CODE, TABLE_NAME, Natural_Key_Value, COLUMN_DIFFERENT, Source_Value, Dest_Value
+		SELECT COMPARE_INSERT_DATE, TYPE_CODE, TABLE_NAME, Natural_Key_Value, COLUMN_DIFFERENT, Source_Value, Target_Value
 		FROM Difference_Check
 		`
 DifferenceStatement = sql
