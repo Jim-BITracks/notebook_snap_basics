@@ -28,6 +28,7 @@ StgDatabaseParam = STG_DATABASE
 RptDatabaseParam = EDW_DATABASE
 stg_table_full = STG_DATABASE + '.' + STG_SCHEMA + '.' + STG_TABLE
 edw_table_full = EDW_DATABASE + '.' + EDW_SCHEMA + '.' + EDW_TABLE
+stg_info_schema = STG_DATABASE + '.INFORMATION_SCHEMA.COLUMNS'
 
 if ( BUSINESS_KEY_COLUMNS == '' )
 	{
@@ -214,7 +215,7 @@ sql = `WITH base AS
 			   AND bk.COLUMN_NAME IS NULL
 			 ORDER BY c.ORDINAL_POSITION
 		)
-		SELECT TRIM(LISTAGG(' ' || column_name || ' = CASE ChangeType WHEN ''Type 1'' THEN SRC.' || column_name || ' ELSE DST.' || column_name || ' END' || ' , '), ', ')
+		SELECT TRIM(LISTAGG(' ' || column_name || ' = CASE ChangeType WHEN ''Type 1'' THEN SRC.' || column_name || ' ELSE DST.' || column_name || ' END' || ' , '))
 			FROM base;`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next(); 
@@ -300,7 +301,7 @@ sql = `  MERGE INTO ` + edw_table_full + ` AS DST
 		WHEN MATCHED AND DST.` + row_is_current + ` = 'Y' THEN
 // Update dimension record, and flag as no longer active if type 2
 		UPDATE SET ` + MergeUpdateSet + `
-		         , ` + row_is_current + ` = CASE ChangeType WHEN 'Type 1' THEN 'Y' ELSE 'N' END
+		           ` + row_is_current + ` = CASE ChangeType WHEN 'Type 1' THEN 'Y' ELSE 'N' END
 				 , ` + row_expiration_date + ` = CASE ChangeType WHEN 'Type 1' THEN DST.` + row_expiration_date + ` ELSE CAST(DATEADD('day',-1,GETDATE()) AS DATE) END
 		         , ` + row_update_date + ` = GETDATE()
 // New records inserted (not used by type 2)
@@ -357,3 +358,4 @@ return err.message
 return MergeRowsInserted + MergeRowsUpdated + RowsInserted
 
  $$;
+ 
