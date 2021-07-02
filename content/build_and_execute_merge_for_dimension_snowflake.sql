@@ -7,49 +7,61 @@
     }
 }
 */
-CREATE OR REPLACE PROCEDURE /*${snowflake_Schema}*/STG/**/.BUILD_AND_EXECUTE_MERGE_FOR_DIMENSION(STG_SCHEMA VARCHAR,
-																	  STG_TABLE VARCHAR, 
-																	  EDW_SCHEMA VARCHAR, 
-																	  EDW_TABLE VARCHAR, 
+CREATE OR REPLACE PROCEDURE /*${snowflake_Schema}*/STG/**/.BUILD_AND_EXECUTE_MERGE_FOR_DIMENSION(SRC_SCHEMA VARCHAR, 
+																	  SRC_TABLE VARCHAR, 
+																	  TGT_SCHEMA VARCHAR, 
+																	  TGT_TABLE VARCHAR, 
 																	  ADDED_DIM_COLUMN_NAMES_TAG VARCHAR, 
 																	  BUSINESS_KEY_COLUMNS VARCHAR, 
 																	  TYPE_2_COLUMNS VARCHAR, 
 																	  TYPE_0_COLUMNS VARCHAR, 
-																	  STG_DATABASE VARCHAR, 
-																	  EDW_DATABASE VARCHAR)
+																	  SRC_DATABASE VARCHAR, 
+																	  TGT_DATABASE VARCHAR)
     RETURNS STRING
 	LANGUAGE JAVASCRIPT	
-	COMMENT = 'Created by: Jerry Simpson (BI Tracks Consulting)'
+	COMMENT = 'Created by: Jerry Simpson (BI Tracks Consulting)
+				Inputs:    
+				    SRC_SCHEMA                  (required)
+				    SRC_TABLE                   (required)
+				    TGT_SCHEMA                  (required)
+				    TGT_TABLE                   (required)
+				    ADDED_DIM_COLUMN_NAMES_TAG  (required)
+				    BUSINESS_KEY_COLUMNS        (required)
+				    TYPE_2_COLUMNS              (optional)
+				    TYPE_0_COLUMNS              (optional)
+				    SRC_DATABASE                (optional)
+				    TGT_DATABASE                (optional)
+					'
 AS $$
 
 try {
 
-StgDatabaseParam = STG_DATABASE
-RptDatabaseParam = EDW_DATABASE
-stg_table_full = STG_DATABASE + '.' + STG_SCHEMA + '.' + STG_TABLE
-edw_table_full = EDW_DATABASE + '.' + EDW_SCHEMA + '.' + EDW_TABLE
-stg_info_schema = STG_DATABASE + '.INFORMATION_SCHEMA.COLUMNS'
+StgDatabaseParam = SRC_DATABASE
+RptDatabaseParam = TGT_DATABASE
+src_table_full = SRC_DATABASE + '.' + SRC_SCHEMA + '.' + SRC_TABLE
+tgt_table_full = TGT_DATABASE + '.' + TGT_SCHEMA + '.' + TGT_TABLE
+src_info_schema = SRC_DATABASE + '.INFORMATION_SCHEMA.COLUMNS'
 
 if ( BUSINESS_KEY_COLUMNS == '' )
 	{
 		return 'No Business key(s) found'
 	}
 
-if ( STG_DATABASE == '' )	
+if ( SRC_DATABASE == '' )	
 	{
-		 stg_table_full = STG_SCHEMA + '.' + STG_TABLE
-		 stg_info_schema = 'INFORMATION_SCHEMA.COLUMNS'
+		 src_table_full = SRC_SCHEMA + '.' + SRC_TABLE
+		 src_info_schema = 'INFORMATION_SCHEMA.COLUMNS'
 	}
  
-if ( EDW_DATABASE == '' )	
+if ( TGT_DATABASE == '' )	
 	{
-		 edw_table_full = EDW_SCHEMA + '.' + EDW_TABLE
+		 tgt_table_full = TGT_SCHEMA + '.' + TGT_TABLE
 	}
 
 
 // Get names for supplemental dimension columns
 sql = `SELECT ROW_IS_CURRENT, ROW_EFFECTIVE_DATE, ROW_EXPIRATION_DATE, ROW_INSERT_DATE, ROW_UPDATE_DATE 
-		FROM ` + STG_SCHEMA + `.ADDED_DIM_COLUMN_NAMES 
+		FROM ` + SRC_SCHEMA + `.ADDED_DIM_COLUMN_NAMES 
 		WHERE ADDED_DIM_COLUMN_NAMES_TAG  = '` + ADDED_DIM_COLUMN_NAMES_TAG + `'`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();
@@ -62,9 +74,9 @@ row_update_date = cmd_res.getColumnValue(5);
 
 // Create staging table 
 sql = `CREATE OR REPLACE TEMPORARY TABLE STAGING_TABLE AS
-		SELECT * FROM ` + stg_info_schema + `
-		WHERE TABLE_NAME = '` + STG_TABLE + `'
-		AND TABLE_SCHEMA = '` + STG_SCHEMA + `'`
+		SELECT * FROM ` + src_info_schema + `
+		WHERE TABLE_NAME = '` + SRC_TABLE + `'
+		AND TABLE_SCHEMA = '` + SRC_SCHEMA + `'`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();
 
@@ -227,7 +239,7 @@ sql = `CREATE OR REPLACE TEMPORARY TABLE MergeChanges AS
         SELECT CAST('' AS NVARCHAR(10)) AS merge_action_change_row_type
              , CAST('' AS NVARCHAR(10)) AS merge_action_change_dim_type
              , *
-          FROM ` + stg_table_full + `
+          FROM ` + src_table_full + `
          WHERE 1=2;`
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();
@@ -243,8 +255,8 @@ sql = `// determine type 2 changes (intra-day changes are treated as Type 1)
                         THEN 'type1'
                         ELSE 'type2'
                    END AS Change
-              FROM ` + stg_table_full + ` s
-              JOIN ` + edw_table_full + ` r
+              FROM ` + src_table_full + ` s
+              JOIN ` + tgt_table_full + ` r
                 ON ` + BusKeyJoin + `
              WHERE r.` + row_is_current + ` = 'Y'
                AND (` + Type2ChangeCheck + `)
@@ -254,8 +266,8 @@ sql = `// determine type 2 changes (intra-day changes are treated as Type 1)
           (
           SELECT ` + BusKeySelect + `
                , 'type1' AS Change
-            FROM ` + stg_table_full + ` s
-            JOIN ` + edw_table_full + ` r
+            FROM ` + src_table_full + ` s
+            JOIN ` + tgt_table_full + ` r
               ON ` + BusKeyJoin + `
            WHERE r.` + row_is_current + ` = 'Y'
              AND (` + Type1ChangeCheck + `)
@@ -265,8 +277,8 @@ sql = `// determine type 2 changes (intra-day changes are treated as Type 1)
 		(
 		SELECT ` + BusKeySelect + `
    			 , 'nochg' AS Change
-		  FROM ` + stg_table_full + ` s
-		  JOIN ` + edw_table_full + ` r
+		  FROM ` + src_table_full + ` s
+		  JOIN ` + tgt_table_full + ` r
 		    ON ` + BusKeyJoin + `
 		 WHERE r.` + row_is_current + ` = 'Y'
 		)
@@ -278,8 +290,8 @@ sql = `// determine type 2 changes (intra-day changes are treated as Type 1)
 					WHEN nc.Change = 'nochg' THEN 'No Change'
 					ELSE 'Insert'
 			   END AS ChangeType
-		  FROM ` + stg_table_full + ` s
-		  LEFT JOIN ` + edw_table_full + ` r
+		  FROM ` + src_table_full + ` s
+		  LEFT JOIN ` + tgt_table_full + ` r
 		    ON ` + BusKeyJoin + `
 		  LEFT JOIN type1 t1
 		    ON ` + BusKeyJoin_t1 + `
@@ -294,7 +306,7 @@ cmd_res.next();
 
 
 // Merge statement
-sql = `  MERGE INTO ` + edw_table_full + ` AS DST
+sql = `  MERGE INTO ` + tgt_table_full + ` AS DST
 		 USING ( SELECT * FROM staging ) AS SRC
 		    ON ` + BusKeyJoin_src + `
 		   AND SRC.ChangeType != 'No Change'
@@ -330,7 +342,7 @@ MergeRowsUpdated = cmd_res.getColumnValue(2);
 	
 
 // outer merge insert (used only for type 2 new rows)
-sql = `INSERT INTO ` + edw_table_full + ` ( ` + MergeInsertList + `
+sql = `INSERT INTO ` + tgt_table_full + ` ( ` + MergeInsertList + `
 				 , ` + row_is_current + `
 				 , ` + row_effective_date + `
 				 , ` + row_expiration_date + `
