@@ -94,7 +94,7 @@ cmd_res.next();
 max_ordinal_position = cmd_res.getColumnValue(1);
 
 
-PK_column = TGT_TABLE.replace('D_', '') + '_ID'
+PK_column = TGT_TABLE + '_ID'
 
 
 //Recreate destination table if needed
@@ -107,7 +107,7 @@ if ( cmd_res.getColumnValue(1) == '')
 	PK_column_def = PK_column + ' NUMBER(38,0) autoincrement'
 
 	sql = `CREATE OR REPLACE TEMPORARY TABLE table_list AS 
-			SELECT COLUMN_NAME || ' ' || DATA_TYPE 
+			SELECT '"' || COLUMN_NAME || '"' || ' ' || DATA_TYPE 
                    || COALESCE('(' || COLUMN_LENGTH || ')','')
                    || COALESCE('COLLATE ' || COLLATION_NAME,'')
                    || ' ' || IS_NULLABLE AS "COLUMNS"
@@ -134,6 +134,7 @@ if ( cmd_res.getColumnValue(1) == '')
 	cmd_res = snowflake.execute({sqlText: sql});
 	cmd_res.next();
 	column_list = cmd_res.getColumnValue(1);
+
 
 	sql = `CREATE TABLE ` + tgt_table_full + ` (` + PK_column_def + ` , ` + column_list + ` ) `
 	cmd_res = snowflake.execute({sqlText: sql});
