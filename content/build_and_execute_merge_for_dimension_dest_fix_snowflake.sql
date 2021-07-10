@@ -7,19 +7,21 @@
     }
 }
 */
-CREATE OR REPLACE PROCEDURE /*${snowflake_Schema}*/STG/**/.BUILD_AND_EXECUTE_MERGE_FOR_DIMENSION_DEST_REPAIR(SRC_SCHEMA VARCHAR, 
-																				  SRC_TABLE VARCHAR, 
-																				  TGT_SCHEMA VARCHAR, 
-																				  TGT_TABLE VARCHAR, 
-																				  ADDED_DIM_COLUMN_NAMES_TAG VARCHAR, 
-																				  BUSINESS_KEY_COLUMNS VARCHAR, 
-																				  TYPE_2_COLUMNS VARCHAR, 
-																				  TYPE_0_COLUMNS VARCHAR, 
-																				  SRC_DATABASE VARCHAR, 
-																				  TGT_DATABASE VARCHAR)
-	RETURNS STRING 
-	LANGUAGE JAVASCRIPT
-	COMMENT = 'Created by: Jerry Simpson (BI Tracks Consulting)
+CREATE OR REPLACE PROCEDURE UTIL_DB.STG.BUILD_AND_EXECUTE_MERGE_FOR_DIMENSION_DEST_REPAIR
+     ( SRC_SCHEMA VARCHAR,
+	   SRC_TABLE VARCHAR,
+       TGT_SCHEMA VARCHAR,
+	   TGT_TABLE VARCHAR,
+       ADDED_DIM_COLUMN_NAMES_TAG VARCHAR,
+       BUSINESS_KEY_COLUMNS VARCHAR,
+	   TYPE_2_COLUMNS VARCHAR,
+       TYPE_0_COLUMNS VARCHAR,
+	   SRC_DATABASE VARCHAR,
+       TGT_DATABASE VARCHAR )
+    returns VARCHAR
+    language JAVASCRIPT
+    comment = 'Created by: Jerry Simpson (BI Tracks Consulting)
+				Last Update: 10 JUN 2021
 				Inputs:    
 				    SRC_SCHEMA                  (required)
 				    SRC_TABLE                   (required)
@@ -32,7 +34,7 @@ CREATE OR REPLACE PROCEDURE /*${snowflake_Schema}*/STG/**/.BUILD_AND_EXECUTE_MER
 				    SRC_DATABASE                (optional)
 				    TGT_DATABASE                (optional)
 					'
-AS $$
+as $$
 
 try 
 {
