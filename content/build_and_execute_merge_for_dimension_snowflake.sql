@@ -140,6 +140,7 @@ cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();
 
 
+
 // Type 1 Columns
 sql = `CREATE OR REPLACE TEMPORARY TABLE TYPE_1_COLUMNS AS 
 		SELECT c.COLUMN_NAME
@@ -337,6 +338,9 @@ sql = `  MERGE INTO ` + tgt_table_full + ` AS DST
 				 , CAST(GETDATE() AS DATE)
 				 );
 `
+
+
+
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();
 MergeRowsInserted = cmd_res.getColumnValue(1);
@@ -369,6 +373,7 @@ catch (err)
 {
 return err.message
 }
-return MergeRowsInserted + MergeRowsUpdated + RowsInserted
+//return MergeRowsInserted + MergeRowsUpdated + RowsInserted
+return "success"
 
 $$;

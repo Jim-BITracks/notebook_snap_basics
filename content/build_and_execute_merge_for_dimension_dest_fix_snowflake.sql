@@ -206,12 +206,17 @@ CALL_ARGUMENTS = "'" + SRC_SCHEMA + "','" + SRC_TABLE + "','" + TGT_SCHEMA + "',
 
 sql = `CALL ` + SRC_SCHEMA + `.BUILD_AND_EXECUTE_MERGE_FOR_DIMENSION(` + CALL_ARGUMENTS + `)`
 cmd_res = snowflake.execute({sqlText: sql});
-cmd_res.next();
-return cmd_res.getColumnValue(1);
+cmd_res.next();    
+return_string = cmd_res.getColumnValue(1);    
+if ( return_string != "success" )
+    {
+        return 'failed: ' + return_string;
+    }
 }
 catch (err)
 {
 return err.message
 }
 
+return 'success'
 $$;

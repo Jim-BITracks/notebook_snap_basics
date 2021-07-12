@@ -55,7 +55,14 @@ sql = ` CREATE OR REPLACE TEMPORARY TABLE view_name AS
         WHERE TABLE_SCHEMA = 'INFORMATION_SCHEMA' 
         AND TABLE_NAME <> 'DATABASES'
         AND TABLE_NAME <> 'LOAD_HISTORY'
-        AND TABLE_NAME <> 'OBJECT_PRIVILEGES'`
+        AND TABLE_NAME <> 'OBJECT_PRIVILEGES'
+        AND TABLE_NAME <> 'REPLICATION_DATABASES'
+        AND TABLE_NAME <> 'TABLE_PRIVILEGES'
+        AND TABLE_NAME <> 'USAGE_PRIVILEGES'  
+        AND TABLE_NAME <> 'EXTERNAL_TABLES'
+        AND TABLE_NAME <> 'FILE_FORMATS'
+        AND TABLE_NAME <> 'INFORMATION_SCHEMA_CATALOG_NAME'
+        `
 cmd_res = snowflake.execute({sqlText: sql});
 
 
@@ -76,10 +83,10 @@ while (i <= max_int) {
               , CASE WHEN TABLE_NAME = 'APPLICABLE_ROLES' THEN 'GRANTEE,ROLE_NAME'
                      WHEN TABLE_NAME = 'COLUMNS' THEN 'TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME'
                      WHEN TABLE_NAME = 'ENABLED_ROLES' THEN 'ROLE_NAME'
-                     WHEN TABLE_NAME = 'EXTERNAL_TABLES' THEN 'TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME'
-                     WHEN TABLE_NAME = 'FILE_FORMATS' THEN 'FILE_FORMATS_CATALOG,FILE_FORMATS_SCHEMA,FILE_FORMATS_NAME'
-                     WHEN TABLE_NAME = 'FUNCTIONS' THEN 'FUNCTIONS_CATALOG,FUNCTIONS_SCHEMA,FUNCTIONS_NAME'
-                     WHEN TABLE_NAME = 'INFORMATION_SCHEMA_CATALOG_NAME' THEN 'CATALOG_NAME'
+                     --WHEN TABLE_NAME = 'EXTERNAL_TABLES' THEN 'TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME'
+                     --WHEN TABLE_NAME = 'FILE_FORMATS' THEN 'FILE_FORMATS_CATALOG,FILE_FORMATS_SCHEMA,FILE_FORMATS_NAME'
+                     WHEN TABLE_NAME = 'FUNCTIONS' THEN 'FUNCTIONS_CATALOG,FUNCTIONS_SCHEMA,FUNCTIONS_NAME,ARGUMENT_SIGNATURE'
+                     --WHEN TABLE_NAME = 'INFORMATION_SCHEMA_CATALOG_NAME' THEN 'CATALOG_NAME'
                      WHEN TABLE_NAME = 'PIPES' THEN 'PIPE_CATALOG,PIPE_SCHEMA,PIPE_NAME'
                      WHEN TABLE_NAME = 'PROCEDURES' THEN 'PROCEDURE_CATALOG,PROCEDURE_SCHEMA,PROCEDURE_NAME,ARGUMENT_SIGNATURE'
                      WHEN TABLE_NAME = 'REFERENTIAL_CONSTRAINTS' THEN 'CONSTRAINTS_CATALOG,CONSTRAINTS_SCHEMA,CONSTRAINTS_NAME'
@@ -105,7 +112,7 @@ while (i <= max_int) {
     
     //Replace views if change detected
     sql = ` SELECT IFF(EXISTS(SELECT 1
-            FROM ` + SRC_SCHEMA + `.DATABASE_D
+            FROM ` + TGT_SCHEMA + `.DATABASE_D
             WHERE DATEDIFF(DAY,ROW_UPDATE_DATE,CURRENT_DATE) <= 1),'EXISTS','') `
     cmd_res = snowflake.execute({sqlText: sql});
     cmd_res.next();
@@ -136,8 +143,13 @@ while (i <= max_int) {
         {
              sql = `CALL ` + SRC_SCHEMA + `.BUILD_AND_EXECUTE_MERGE_FOR_DIMENSION_DEST_REPAIR(` + CALL_ARGUMENTS + `)`
         }
-
     cmd_res = snowflake.execute({sqlText: sql});
+    cmd_res.next()       
+    return_string = cmd_res.getColumnValue(1);    
+    if ( return_string != "success" )
+        {
+            return 'failed: ' + return_string;
+        }
     
     i++
     
