@@ -80,17 +80,16 @@ sql = `CREATE OR REPLACE TEMPORARY TABLE STAGING_TABLE AS
 		WHERE TABLE_NAME = '` + SRC_TABLE + `'
 		AND TABLE_SCHEMA = '` + SRC_SCHEMA + `'`
 cmd_res = snowflake.execute({sqlText: sql});
-cmd_res.next();
 
 
-// Create business key table
-sql = `CREATE OR REPLACE TEMPORARY TABLE BUSINESS_KEY_COLUMNS AS
-WITH CTE (KEY_COLUMN) AS (
-SELECT '` + BUSINESS_KEY_COLUMNS + `' AS KEY_COLUMN)
-SELECT TRIM(VALUE) AS COLUMN_NAME
-FROM CTE, table(SPLIT_TO_TABLE(KEY_COLUMN,','))` 
+//Total Column Array
+TotalColumnArray = [];
+
+sql = `SELECT DISTINCT COLUMN_NAME, ORDINAL_POSITION FROM STAGING_TABLE ORDER BY ORDINAL_POSITION`
 cmd_res = snowflake.execute({sqlText: sql});
-cmd_res.next();
+    while (cmd_res.next()) {
+    TotalColumnArray.push(cmd_res.getColumnValue(1));
+    }
 
 
 // Business Key Select/Join
@@ -99,8 +98,7 @@ sql = `WITH base AS
 		   SELECT DISTINCT TOP 1000 c.ORDINAL_POSITION
 				, c.COLUMN_NAME
 			 FROM STAGING_TABLE c
-			 JOIN BUSINESS_KEY_COLUMNS m
-			   ON m.COLUMN_NAME = c.COLUMN_NAME
+			 WHERE c.COLUMN_NAME IN (` + BUSINESS_KEY_COLUMNS.split(",").map( d => "'" + d + "'").toString() + `)
 			ORDER BY c.ORDINAL_POSITION
 		)
 		  SELECT TRIM(LISTAGG(' s.' || COLUMN_NAME || ', '), ', ') || ' ' AS "SELECT"
@@ -120,39 +118,15 @@ BusKeyJoin_nc = cmd_res.getColumnValue(5);
 BusKeyJoin_src = cmd_res.getColumnValue(6);
 
 
-// Type 0 Columns 
-sql = `CREATE OR REPLACE TEMPORARY TABLE TYPE_0_COLUMNS AS
-		WITH TYPE_0 (KEY_COLUMN) AS (
-		SELECT '` + TYPE_0_COLUMNS + `')
-		SELECT TRIM(VALUE) AS COLUMN_NAME
-		FROM TYPE_0, table(SPLIT_TO_TABLE(KEY_COLUMN,','));`
-cmd_res = snowflake.execute({sqlText: sql});
-cmd_res.next();
+/*
+TotalColumnArray.map( d => "'" + d + "'").toString()
+BUSINESS_KEY_COLUMNS.split(",").map( d => "'" + d + "'").toString()
+TYPE_0_COLUMNS.split(",").map( d => "'" + d + "'").toString()
+TYPE_2_COLUMNS.split(",").map( d => "'" + d + "'").toString()
+*/
 
-
-// Type 2 Columns 
-sql = `CREATE OR REPLACE TEMPORARY TABLE TYPE_2_COLUMNS AS
-		WITH TYPE_2 (KEY_COLUMN) AS (
-		SELECT '` + TYPE_2_COLUMNS + `')
-		SELECT TRIM(VALUE) AS COLUMN_NAME
-		FROM TYPE_2, table(SPLIT_TO_TABLE(KEY_COLUMN,','));`
-cmd_res = snowflake.execute({sqlText: sql});
-cmd_res.next();
-
-
-
-// Type 1 Columns
-sql = `CREATE OR REPLACE TEMPORARY TABLE TYPE_1_COLUMNS AS 
-		SELECT c.COLUMN_NAME
-		  FROM STAGING_TABLE c
-		  LEFT JOIN TYPE_2_COLUMNS t2
-			ON t2.COLUMN_NAME = c.COLUMN_NAME
-		  LEFT JOIN BUSINESS_KEY_COLUMNS bk
-			ON bk.COLUMN_NAME = c.COLUMN_NAME
-		 WHERE t2.COLUMN_NAME IS NULL
-		   AND bk.COLUMN_NAME IS NULL;`
-cmd_res = snowflake.execute({sqlText: sql});
-cmd_res.next();
+TYPE_1_COLUMNS = TotalColumnArray.map( d => "'" + d + "'").filter( e => !TYPE_2_COLUMNS.split(",").map( d => "'" + d + "'").includes(e));
+TYPE_1_COLUMNS = TotalColumnArray.map( d => "'" + d + "'").filter( e => !BUSINESS_KEY_COLUMNS.split(",").map( d => "'" + d + "'").includes(e));
 
 
 // Type 1 Change Check 
@@ -161,8 +135,7 @@ sql = `WITH base AS
 		   SELECT DISTINCT TOP 1000 c.ORDINAL_POSITION
 				, c.COLUMN_NAME
 			 FROM STAGING_TABLE c
-			 JOIN TYPE_1_COLUMNS t1
-			   ON t1.COLUMN_NAME = c.COLUMN_NAME
+			 WHERE c.COLUMN_NAME IN (` + TYPE_1_COLUMNS + `)
 			ORDER BY c.ORDINAL_POSITION
 		)
 		SELECT TRIM(LISTAGG(' IFNULL(CAST(r.' || column_name || ' AS VARCHAR),''-99999'') != IFNULL(CAST(s.' || column_name || ' AS VARCHAR),''-99999'')' || ' OR '), 'OR ')
@@ -182,8 +155,7 @@ sql = `WITH base AS
 		   SELECT DISTINCT TOP 1000 c.ORDINAL_POSITION
 				, c.COLUMN_NAME
 			 FROM STAGING_TABLE c
-			 JOIN TYPE_2_COLUMNS t1
-			   ON t1.COLUMN_NAME = c.COLUMN_NAME
+			 WHERE c.COLUMN_NAME IN (` + TYPE_2_COLUMNS.split(",").map( d => "'" + d + "'").toString() + `)
 			ORDER BY c.ORDINAL_POSITION
 		)
 		SELECT TRIM(LISTAGG(' IFNULL(CAST(r.' || column_name || ' AS VARCHAR),''-99999'') != IFNULL(CAST(s.' || column_name || ' AS VARCHAR),''-99999'')' || ' OR '), 'OR ')
@@ -222,12 +194,8 @@ sql = `WITH base AS
 		    SELECT DISTINCT TOP 1000 c.ORDINAL_POSITION
 				 , c.COLUMN_NAME
 			  FROM STAGING_TABLE c
-			  LEFT JOIN TYPE_0_COLUMNS t0
-				ON t0.COLUMN_NAME = c.COLUMN_NAME
-			  LEFT JOIN BUSINESS_KEY_COLUMNS bk
-				ON bk.COLUMN_NAME = c.COLUMN_NAME
-			 WHERE t0.COLUMN_NAME IS NULL
-			   AND bk.COLUMN_NAME IS NULL
+			  WHERE c.COLUMN_NAME NOT IN (` + TYPE_0_COLUMNS.split(",").map( d => "'" + d + "'").toString() + `)
+              AND c.COLUMN_NAME NOT IN (` + BUSINESS_KEY_COLUMNS.split(",").map( d => "'" + d + "'").toString() + `)
 			 ORDER BY c.ORDINAL_POSITION
 		)
 		SELECT TRIM(LISTAGG(' ' || column_name || ' = CASE ChangeType WHEN ''Type 1'' THEN SRC.' || column_name || ' ELSE DST.' || column_name || ' END' || ' , '))
@@ -338,9 +306,6 @@ sql = `  MERGE INTO ` + tgt_table_full + ` AS DST
 				 , CAST(GETDATE() AS DATE)
 				 );
 `
-
-
-
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();
 MergeRowsInserted = cmd_res.getColumnValue(1);
