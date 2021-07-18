@@ -117,6 +117,8 @@ BusKeyJoin_t2 = cmd_res.getColumnValue(4);
 BusKeyJoin_nc = cmd_res.getColumnValue(5);
 BusKeyJoin_src = cmd_res.getColumnValue(6);
 
+//for debug
+//return 'BusKeySelect: ' + BusKeySelect
 
 /*
 TotalColumnArray.map( d => "'" + d + "'").toString()
@@ -306,6 +308,10 @@ sql = `  MERGE INTO ` + tgt_table_full + ` AS DST
 				 , CAST(GETDATE() AS DATE)
 				 );
 `
+
+//for debug
+//return sql;
+
 cmd_res = snowflake.execute({sqlText: sql});
 cmd_res.next();
 MergeRowsInserted = cmd_res.getColumnValue(1);
