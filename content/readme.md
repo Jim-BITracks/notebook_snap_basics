@@ -4,10 +4,10 @@ The Notebooks included in this Solution contain Code and Instructions for _Creat
 
 Key Concepts:
 
-- All of the **Code** which will be be _transformed_ into eltSnap **Projects** are contained Notebook (.ipydb) and SQL (.sql) files
-- Additional Notebooks are provided to assist in the _Setup_ as well as a later _Refreshes_ of these Projects
-- Notebook (and .sql) files must first be _Ingested_ into the eltsnap_v2 database. One option for this is to use the Notebook: **Ingest ADS Notebook Files (Interactive)** contained in this folder
-- Notebook Code cells contain _metadata_ (pre-populated for these Notebooks) which provide additional configurations needed by the eltSnap runtime
+- All of the **Code** which will be be _transformed_ into eltSnap **Projects** are contained in Notebook (.ipydb) and SQL (.sql) files
+- Additional Notebooks are provided to assist in the _Setup_ as well as a later _Updates_ to these Projects
+- Notebook (and .sql) files must first be _Ingested_ into the eltsnap_v2 database. One option for this is to use the Notebook: [Ingest ADS Notebook Files (Interactive)](ingest_ads_notebook_files_interactive.ipynb) contained in this folder
+- Notebook Code cells contain _metadata_ (pre-populated in the following Notebooks) which provide additional configurations needed by the _eltSnap_ runtime
 - If you have cloned this repository, you may see subsequent updates to these notebook files via GitHub. In that event, you may want to:
     - Save any custom changes you have made to separate folders
     - Sync your local folders with GitHub
@@ -18,7 +18,7 @@ Notebook Types:
 - ...(Project) - Contains the Notebook _Code_ which is deployed as runnable _Packages_ in eltSnap
 - ...(Project Setup) - Contains setup instructions and code for _deploying_ notebook (and .sql) file based Projects to eltSnap
 - ...(Interactive) - A self-contained solution which can be configured and run in Azure Data Studio, without any additional set-up or deployment 
-- ...(Cmdlets) - One line powershell commands to providing re-usable finctionality (i.e., copying a File or Folder)
+- ...(Cmdlets) - One line powershell commands to providing re-usable functionality (i.e., copying a File or Folder)
 
 > The notebook **Ingest ADS Notebook Files** can be run _Interactively_ (directly in Azure Data Studio) and the project does **not** first need to be deployed to eltSnap. The related "Project" and "Project Setup" notebooks for _Ingest ADS Notebook Files_ are included below as an **eltSnap** deployment _option_
 
