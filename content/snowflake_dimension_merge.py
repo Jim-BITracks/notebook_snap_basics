@@ -183,7 +183,6 @@ print('natural_key_select: ' + natural_key_select)
 # ## Get Natural Key (Join)
 
 # %%
-#natural_key = 'IS_TRANSIENT,RETENTION_TIME'
 sql = """
 select listagg('t."' || i.COLUMN_NAME || '" = s."' || i.COLUMN_NAME || '"', ' AND ') within group (order by i.ORDINAL_POSITION) 
   from INFORMATION_SCHEMA.COLUMNS i
@@ -215,7 +214,6 @@ print('natural_key_join_t1: ', natural_key_join_t1, '\nnatural_key_join_t2: ', n
 # ## Type 1 Change Check
 
 # %%
-#natural_key = 'IS_TRANSIENT,RETENTION_TIME'
 sql = """
 select listagg('NVL(t.' || column_name || '::varchar,''-99999'') != NVL(s.' || column_name || '::varchar,''-99999'')', ' OR ') within group (order by i.ORDINAL_POSITION) 
   from INFORMATION_SCHEMA.COLUMNS i
@@ -385,6 +383,15 @@ one_row = cur.fetchone()
 print(one_row[0])
 
 # %% [markdown]
+# ## Debug (staging table)
+
+# %%
+#sql = "select * from staging"
+#cur.execute(sql)
+#df = cur.fetch_pandas_all()
+#df
+
+# %% [markdown]
 # ## Merge Statement
 
 # %%
@@ -424,15 +431,6 @@ one_row = cur.fetchone()
 print('rows inserted: ', one_row[0])
 print('rows updated: ', one_row[1])
 
-
-# %% [markdown]
-# ## Debug (staging table)
-
-# %%
-#sql = "select * from staging"
-#cur.execute(sql)
-#df = cur.fetch_pandas_all()
-#df
 
 # %% [markdown]
 # ## Outer Merge Insert (used only for type 2 new rows)
