@@ -21,10 +21,10 @@ import pyarrow as pa
 # snowflake connection variables
 snowflake_user = 'JMILLER'
 snowflake_password = os.environ['BISNOWPASS']
-snowflake_account = 'eh69371.east-us-2.azure'
+snowflake_account = 'rn93488.east-us-2.azure'
 snowflake_role = 'SYSADMIN'
 snowflake_warehouse = 'COMPUTE_WH'
-snowflake_database = 'UTIL_DB'
+snowflake_database = 'SNAP'
 snowflake_schema = 'METADATA'
 
 print('Using Notebook Variables:')
@@ -457,5 +457,4 @@ print(sql)
 cur.execute(sql)
 one_row = cur.fetchone()
 print('rows inserted: ', one_row[0])
-
 
