@@ -41,7 +41,9 @@ print('snowflake_schema: ' + snowflake_schema)
 
 # %%
 tgt_table_schema = 'METADATA'
-tgt_table_name = 'D_DATABASES'
+#tgt_table_name = 'D_DATABASES'
+#tgt_table_name = 'D_TABLES'
+tgt_table_name = 'D_COLUMNS'
                
 print('Using Notebook Variables:')
 print('tgt_table_schema: ' + tgt_table_schema)
@@ -73,7 +75,7 @@ print(one_row[0])
 
 # %%
 sql = """
-select SRC_TABLE_SCHEMA, SRC_TABLE_NAME, NATURAL_KEY, TYPE_2_COLUMNS, TYPE_0_COLUMNS, MAP_ADDED_COLUMNS_TAG
+select SRC_TABLE_SCHEMA, SRC_TABLE_NAME, NATURAL_KEY, TYPE_2_COLUMNS, TYPE_0_COLUMNS, MAP_ADDED_COLUMNS_TAG, SRC_WHERE_CLAUSE
   from METADATA.MAP_TABLE
  where TGT_TABLE_SCHEMA = '""" + tgt_table_schema + """'
    and TGT_TABLE_NAME = '""" + tgt_table_name + """'
@@ -87,11 +89,12 @@ natural_key = one_row[2]
 type_2_columns = one_row[3]
 type_0_columns = one_row[4] or ""
 map_added_columns_tag = one_row[5]
+src_where_clause = one_row[6] or ""
 
 src_table_full = '"' + src_table_schema + '"."' + src_table_name + '"'
 tgt_table_full = '"' + tgt_table_schema + '"."' + tgt_table_name + '"'
 
-print('return values: ', src_table_schema, src_table_name, natural_key, type_2_columns, type_0_columns, map_added_columns_tag)
+print('return values: ', src_table_schema, src_table_name, natural_key, type_2_columns, type_0_columns, map_added_columns_tag, src_where_clause)
 print('source table: ', src_table_full, '\ntarget table: ', tgt_table_full)
 
 # %% [markdown]
@@ -386,7 +389,7 @@ print(one_row[0])
 # ## Debug (staging table)
 
 # %%
-#sql = "select * from staging"
+#sql = "select * from staging " + src_where_clause
 #cur.execute(sql)
 #df = cur.fetch_pandas_all()
 #df
@@ -397,7 +400,7 @@ print(one_row[0])
 # %%
 sql = """
 MERGE INTO """ + tgt_table_full + """ AS TGT
-USING ( SELECT * FROM staging ) AS SRC
+USING ( SELECT * FROM staging """ + src_where_clause + """ ) AS SRC
    ON """ + natural_key_join_src + """
   AND SRC.ChangeType != 'No Change'
  WHEN MATCHED AND TGT.""" + row_is_current + """ = 'Y' THEN
@@ -457,4 +460,3 @@ print(sql)
 cur.execute(sql)
 one_row = cur.fetchone()
 print('rows inserted: ', one_row[0])
-
