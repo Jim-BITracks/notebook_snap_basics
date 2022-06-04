@@ -24,17 +24,9 @@
     url: metadata_refresh_for_sql_server_project
   - title: Metadata Refresh for SQL Server (Project Setup)
     url: metadata_refresh_for_sql_server_project_setup
-  - title: Metadata Refresh for Snowflake (Project)
-    url: metadata_refresh_for_snowflake_project
-  - title: Metadata Refresh for Snowflake (Project Setup)
-    url: metadata_refresh_for_snowflake_project_setup
   - title: SQL Server Backup (Project)
     url: sql_server_backup_project
   - title: SQL Server Backup (Project Setup)
     url: sql_server_backup_project_setup
   - title: PowerShell Utilities (Cmdlets)
     url: powershell_utilities
-  - title: Build Merge for Snowflake Dimension (Project Setup)
-    url: build_merge_for_dimension_snowflake  
-  - title: Build Sample Merge for Snowflake Dimension (Project Setup)
-    url: build_sample_merge_for_dimension_snowflake_project_setup

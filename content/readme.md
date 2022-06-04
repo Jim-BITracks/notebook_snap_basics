@@ -40,42 +40,8 @@ Notebook Types:
 
 [Metadata Refresh for SQL Server (Project Setup)](metadata_refresh_for_sql_server_project_setup.ipynb) - Initial Setup scripts for **Metadata Refresh for SQL Server (Project)**
 
-[Metadata Refresh for Snowflake (Project)](metadata_refresh_for_snowflake_project.ipynb) - Refreshes Metadata collected from a Snowflake database and stored into an eltSnap database
-
-[Metadata Refresh for Snowflake (Project Setup)](metadata_refresh_for_snowflake_project_setup.ipynb) - Initial Setup scripts for **Metadata Refresh for Snowflake (Project)**
-
 [SQL Server Backup (Project)](sql_server_backup_project.ipynb) - Refreshes Metadata collected from a SQL Server database and stored into an eltSnap database
 
 [SQL Server Backup (Project Setup)](sql_server_backup_project_setup.ipynb) - Initial Setup scripts for **Metadata Refresh for SQL Server (Project)**
 
 [PowerShell Utilities (Project)](powershell_utilities.ipynb) - Contains miscellaneous Cmdlets (a one-line script) which can be incorporated into other notebookSnap project
-
-[Build Merge for Snowflake Dimension (Project Setup)](build_merge_for_dimension_snowflake.ipynb) - NotebookSnap project to deploy Snowflake MERGE statements
-
-[Build Sample Merge for Snowflake Dimension (Project Setup)](build_sample_merge_for_dimension_snowflake_project_setup.ipynb) - NotebookSnap project to create a sample Snowflake MERGE statement
-
-## SQL Files:
-
-### Used by Project 'Metadata Refresh for Snowflake':
-
-- [Refresh Database Names (snowflake)](refresh_database_names_snowflake.sql)
-
-- [Refresh Table Names (snowflake)](refresh_table_names_snowflake.sql) 
-
-- [Refresh Column Names (snowflake)](refresh_column_names_snowflake.sql)
-
-### Used by Project 'Build Merge for Snowflake Dimension':
-
-- [Create Table ADDED_DIM_COLUMN_NAMES (snowflake)](added_dim_column_names_snowflake_create.sql)
-
-- [Insert Table ADDED_DIM_COLUMN_NAMES (snowflake)](added_dim_column_names_snowflake_insert.sql)
-
-- [Build and Execute Merge Statement (snowflake)](build_and_execute_merge_for_dimension_snowflake.sql)
-
-- [Build and Execute Merge Statement with Self-Healing (snowflake)](build_and_execute_merge_for_dimension_dest_fix_snowflake.sql)
-
-### Used by Project 'Build Sample Merge for Snowflake Dimension':
-
-- [Create Table DIM_COLUMN (snowflake)](Create_DIM_COLUMN_Table.sql)
-
-- [Create View DIM_COLUMN (snowflake)](Create_DIM_COLUMN_VIEW_as_src.sql)
