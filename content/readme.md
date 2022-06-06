@@ -26,11 +26,7 @@ Notebook Types:
 
 ## Notebooks:
 
-[Ingest ADS Notebook Files (Interactive)](ingest_ads_notebook_files_interactive.ipynb) - PowerShell Notebook to Ingest '.ipynb' Files into the **eltSnap** database **interactively**
-
-[Ingest ADS Notebook Files (Project)](ingest_ads_notebook_files_project.ipynb) - PowerShell Notebook Project to Ingest '.ipynb' Files into the **eltSnap** database
-
-[Ingest ADS Notebook Files (Project Setup)](ingest_ads_notebook_files_project_setup.ipynb) - Initial Setup scripts for **Ingest ADS Notebook Files (Project)**
+[Ingest ADS Notebook Files (Interactive)](ingest_ads_notebook_files_interactive.ipynb) - PowerShell Notebook to Ingest '.ipynb' Files into the **eltSnap** database
 
 [Database Log Clean-up (Project)](database_log_cleanup_project.ipynb) - SQL Notebook Project to Delete eltSnap related Log rows which are _older_ than thresholds set in configuration tables. **Note**: This is _pre_-installed into the eltsnap_v2 database, so **no setup or deployment** is needed to be able to run this project in eltSnap
 

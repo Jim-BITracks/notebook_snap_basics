@@ -12,10 +12,6 @@
   sections:
   - title: Ingest ADS Notebook Files (Interactive)
     url: ingest_ads_notebook_files_interactive
-  - title: Ingest ADS Notebook Files (Project)
-    url: ingest_ads_notebook_files_project
-  - title: Ingest ADS Notebook Files (Project Setup)
-    url: ingest_ads_notebook_files_project_setup
   - title: Database Log Clean-up (Project)
     url: database_log_cleanup_project
   - title: Database Log Clean-up (Project Setup)
